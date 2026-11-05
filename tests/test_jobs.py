@@ -338,7 +338,9 @@ def test_run_without_a_backend_waits_with_status_3_and_says_what_to_do(tmp_path,
         capsys, "run", song, "--job", folder, "--match", "instrumental", *SPLIT, expect=3
     ).out
     assert "Not complete: 3 of 3 chunk(s) still lack a result." in first
-    assert f"put what it returns in {folder}/processed" in first.replace(os.sep, "/")
+    # the folder is written with the system's separator; compare both sides with "/"
+    wanted = f"put what it returns in {folder}/processed".replace(os.sep, "/")
+    assert wanted in first.replace(os.sep, "/")
     assert "seamsplit status" in first
     _hand_back(folder, stems=("instrumental",))
     done = _cli(

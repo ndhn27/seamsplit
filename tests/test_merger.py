@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import tracemalloc
 
@@ -606,11 +607,27 @@ def test_load_manifest_turns_unreadable_content_into_valueerrors(tmp_path):
     with pytest.raises(ValueError, match="not UTF-8"):
         load_manifest(str(not_utf8))
 
-    # nesting deep enough to overflow the JSON parser's stack (a RecursionError)
+    # nesting far deeper than any manifest. Whether the JSON parser gives up on it (a
+    # RecursionError, "nested too deeply") or copes (Python 3.14 sizes its limit from the real
+    # stack and parses 100 000 levels) depends on the interpreter; either way the answer is a
+    # ValueError, never a traceback
     deep = tmp_path / "deep.json"
     deep.write_text('{"parts": ' + "[" * 100_000 + "]" * 100_000 + ', "overlap_ms": 0}')
-    with pytest.raises(ValueError, match="nested too deeply"):
+    with pytest.raises(ValueError, match="nested too deeply|not a valid seamsplit manifest"):
         load_manifest(str(deep))
+
+
+def test_load_manifest_says_so_when_the_json_parser_runs_out_of_stack(tmp_path, monkeypatch):
+    """The ``RecursionError`` branch on its own, whatever the interpreter's limit is."""
+
+    def overflow(_file):
+        raise RecursionError("maximum recursion depth exceeded")
+
+    path = _write_manifest(tmp_path, {"parts": ["a.wav"], "overlap_ms": 0})
+    monkeypatch.setattr(json, "load", overflow)
+    with pytest.raises(ValueError, match="nested too deeply") as excinfo:
+        load_manifest(path)
+    assert path in str(excinfo.value)
 
 
 def test_merge_audio_rejects_a_part_that_is_not_a_file_name(tmp_path):
@@ -1283,7 +1300,7 @@ def test_find_processed_files_by_name_needs_no_warning(tmp_path):
     folder = _touch(tmp_path / "p", "song_part02_instrumental.wav", "song_part01_instrumental.wav")
     report = MergeReport()
     found = find_processed_files(folder, _part_names(2), report=report)
-    assert [f.rsplit("/", 1)[-1] for f in found] == [
+    assert [os.path.basename(f) for f in found] == [
         "song_part01_instrumental.wav",
         "song_part02_instrumental.wav",
     ]
@@ -1295,7 +1312,7 @@ def test_find_processed_files_pairs_renamed_files_by_order_not_alphabetically(tm
     folder = _touch(tmp_path / "p", *[f"Song - {i}.wav" for i in range(1, 11)])
     report = MergeReport()
     found = find_processed_files(folder, _part_names(10), report=report)
-    assert [f.rsplit("/", 1)[-1] for f in found] == [f"Song - {i}.wav" for i in range(1, 11)]
+    assert [os.path.basename(f) for f in found] == [f"Song - {i}.wav" for i in range(1, 11)]
     assert len(report.warnings) == 1
     assert "by order" in report.warnings[0]
     assert "'Song - 1.wav' is part 1" in report.warnings[0]
@@ -1311,7 +1328,7 @@ def test_find_processed_files_order_pairing_without_a_report_warns(tmp_path):
 def test_find_processed_files_order_pairing_ignores_files_that_are_not_audio(tmp_path):
     folder = _touch(tmp_path / "p", "Song - 1.flac", "Song - 2.flac", "manifest.json", "notes.txt")
     found = find_processed_files(folder, _part_names(2), report=MergeReport())
-    assert [f.rsplit("/", 1)[-1] for f in found] == ["Song - 1.flac", "Song - 2.flac"]
+    assert [os.path.basename(f) for f in found] == ["Song - 1.flac", "Song - 2.flac"]
 
 
 def test_find_processed_files_order_pairing_respects_match(tmp_path):
@@ -1320,7 +1337,7 @@ def test_find_processed_files_order_pairing_respects_match(tmp_path):
         names += [f"Song - {i} (Vocals).wav", f"Song - {i} (Instrumental).wav"]
     folder = _touch(tmp_path / "p", *names)
     found = find_processed_files(folder, _part_names(3), "instrumental", MergeReport())
-    assert [f.rsplit("/", 1)[-1] for f in found] == [
+    assert [os.path.basename(f) for f in found] == [
         f"Song - {i} (Instrumental).wav" for i in (1, 2, 3)
     ]
 

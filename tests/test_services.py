@@ -2,6 +2,7 @@
 options given on the command line settle the length limit, format and overlap."""
 
 import json
+import os
 
 import pytest
 
@@ -74,7 +75,7 @@ def test_the_default_file_is_read_when_it_is_there_and_ignored_when_it_is_not(
     _write(tmp_path / "config" / "seamsplit", {"mine": {"limit_s": 45}})
     assert set(available_presets()) == {"xminus", "mine"}
     monkeypatch.delenv("XDG_CONFIG_HOME")
-    assert default_services_file().endswith(".config/seamsplit/services.json")
+    assert default_services_file().replace(os.sep, "/").endswith(".config/seamsplit/services.json")
 
 
 def test_a_file_that_was_named_must_exist(tmp_path, monkeypatch):

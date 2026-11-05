@@ -1,0 +1,132 @@
+{
+  "about": "Real music used by the benchmarks. Files are fetched from the repositories named here, at the commit given, and checked against sha256; none of the audio is part of SeamSplit.",
+  "songs": [
+    {
+      "id": "so_easy",
+      "title": "Cristina Vane - So Easy",
+      "kind": "excerpt, 30 s, with ground-truth stems",
+      "files": {
+        "mix": {
+          "repo": "f90/Wave-U-Net",
+          "commit": "75eeae69953d6688ae7ec863c69146171accf08c",
+          "path": "audio_examples/Cristina Vane - So Easy/mix.mp3",
+          "sha256": "0aedff186740af6ef1c2810d692a36b124b5290550e021b16c34c35ea49d7c62",
+          "bytes": 481070
+        },
+        "vocals": {
+          "repo": "f90/Wave-U-Net",
+          "commit": "75eeae69953d6688ae7ec863c69146171accf08c",
+          "path": "audio_examples/Cristina Vane - So Easy/vocals_true.mp3",
+          "sha256": "9cd90e17ce553d63f09821e59d40caacf0748fc6659dc7e1bd8db40c1434769a",
+          "bytes": 481070
+        },
+        "instrumental": {
+          "repo": "f90/Wave-U-Net",
+          "commit": "75eeae69953d6688ae7ec863c69146171accf08c",
+          "path": "audio_examples/Cristina Vane - So Easy/accompaniment_true.mp3",
+          "sha256": "f37b37f1c56b41f2eec1a187525bb5796a692b361af1038c72736a68ccf44f0b",
+          "bytes": 481070
+        }
+      },
+      "truth": "vocals and accompaniment of the original multitrack, as 128 kbit/s MP3 (they add up to the mix to 18-23 dB, which is the ceiling for any score against them)",
+      "licence": "MUSDB18 track (SiSEC 2018); the excerpt is published in the Wave-U-Net repository (MIT code). The music is for research use under the track's own licence",
+      "redistributable": false
+    },
+    {
+      "id": "mallory",
+      "title": "The Mountaineering Club - Mallory",
+      "kind": "excerpt, 30 s, with ground-truth stems",
+      "files": {
+        "mix": {
+          "repo": "f90/Wave-U-Net",
+          "commit": "75eeae69953d6688ae7ec863c69146171accf08c",
+          "path": "audio_examples/The Mountaineering Club - Mallory/mix.mp3",
+          "sha256": "47461f4338f96c4968a4cff934e5d1f376daff3ff4434bee014218079d697fe3",
+          "bytes": 481070
+        },
+        "vocals": {
+          "repo": "f90/Wave-U-Net",
+          "commit": "75eeae69953d6688ae7ec863c69146171accf08c",
+          "path": "audio_examples/The Mountaineering Club - Mallory/vocals_true.mp3",
+          "sha256": "51a9be174ec1127b617feec175302f7370cb2352da564f1b949e4b6ab2dfab02",
+          "bytes": 481070
+        },
+        "instrumental": {
+          "repo": "f90/Wave-U-Net",
+          "commit": "75eeae69953d6688ae7ec863c69146171accf08c",
+          "path": "audio_examples/The Mountaineering Club - Mallory/accompaniment_true.mp3",
+          "sha256": "f663dd70360b86bd674e5e9e88018a69ac334da8b87213f425a40e85ee4c49fd",
+          "bytes": 481070
+        }
+      },
+      "truth": "vocals and accompaniment of the original multitrack, as 128 kbit/s MP3 (they add up to the mix to 18-23 dB, which is the ceiling for any score against them)",
+      "licence": "MUSDB18 track (SiSEC 2018); the excerpt is published in the Wave-U-Net repository (MIT code). The music is for research use under the track's own licence",
+      "redistributable": false
+    },
+    {
+      "id": "widow",
+      "title": "Triviul feat. The Fiend - Widow",
+      "kind": "excerpt, 30 s, with ground-truth stems",
+      "files": {
+        "mix": {
+          "repo": "f90/Wave-U-Net",
+          "commit": "75eeae69953d6688ae7ec863c69146171accf08c",
+          "path": "audio_examples/Triviul feat. The Fiend - Widow/mix.mp3",
+          "sha256": "09d50ded751adff22757f322448180f058793e8f0a444016b58afe038e970c84",
+          "bytes": 481070
+        },
+        "vocals": {
+          "repo": "f90/Wave-U-Net",
+          "commit": "75eeae69953d6688ae7ec863c69146171accf08c",
+          "path": "audio_examples/Triviul feat. The Fiend - Widow/vocals_true.mp3",
+          "sha256": "59418d60eaaf7bebaaed1bff54382637ed7d079006455c7ee548cd762392d15e",
+          "bytes": 481070
+        },
+        "instrumental": {
+          "repo": "f90/Wave-U-Net",
+          "commit": "75eeae69953d6688ae7ec863c69146171accf08c",
+          "path": "audio_examples/Triviul feat. The Fiend - Widow/accompaniment_true.mp3",
+          "sha256": "ba7afbae37672b212705912d3f0f541a89dc464ecc5e5d6bc94ca583fd7704fa",
+          "bytes": 481070
+        }
+      },
+      "truth": "vocals and accompaniment of the original multitrack, as 128 kbit/s MP3 (they add up to the mix to 18-23 dB, which is the ceiling for any score against them)",
+      "licence": "MUSDB18 track (SiSEC 2018); the excerpt is published in the Wave-U-Net repository (MIT code). The music is for research use under the track's own licence",
+      "redistributable": false
+    },
+    {
+      "id": "slow_motion_dream",
+      "title": "Slow Motion Dream (excerpt) - Steven M Bryant, ft. CSoul, Alex Beroza & Robert Siekawitch",
+      "kind": "excerpt, 10.9 s, no ground truth",
+      "files": {
+        "mix": {
+          "repo": "deezer/spleeter",
+          "commit": "6f2c8a2e283914faa544631430f65b793f1b1218",
+          "path": "audio_example.mp3",
+          "sha256": "4b431d535d235bd81b62f816f08c3f1afb6679d2706d84b3b75903b7df909507",
+          "bytes": 262867
+        }
+      },
+      "truth": null,
+      "licence": "Creative Commons Attribution 3.0 (ccMixter: http://dig.ccmixter.org/files/stevieb357/34740), as stated in the README of deezer/spleeter",
+      "redistributable": true
+    },
+    {
+      "id": "demucs_test",
+      "title": "test.mp3 of the Demucs repository",
+      "kind": "excerpt, 20 s, no ground truth",
+      "files": {
+        "mix": {
+          "repo": "facebookresearch/demucs",
+          "commit": "e976d93ecc3865e5757426930257e200846a520a",
+          "path": "test.mp3",
+          "sha256": "aa8d8e51ca1b65e4e04f0be52c7e63b38c17aaaeded9193bc6ce0acf6d6a6d9a",
+          "bytes": 802480
+        }
+      },
+      "truth": null,
+      "licence": "not stated in the repository (its code is MIT); the recording is not redistributed here",
+      "redistributable": false
+    }
+  ]
+}

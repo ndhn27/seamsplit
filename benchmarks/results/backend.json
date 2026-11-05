@@ -1,0 +1,44 @@
+{
+ "song": "so_easy",
+ "command": "seamsplit run mix.mp3 --job JOB --backend audio-separator --backend-model UVR-MDX-NET-Voc_FT.onnx --target 8 --before-slack 3 --after-slack 1 --overlap 2 --min-final 3 --format flac --out-format flac --anchor --report JOB/report.json",
+ "first_run": {
+  "seconds": 77.43659020199993,
+  "exit_code": 0
+ },
+ "second_run": {
+  "seconds": 1.0899044129999993,
+  "exit_code": 0
+ },
+ "output_files": [
+  "mix_instrumental.flac",
+  "mix_vocals.flac"
+ ],
+ "scores": {
+  "instrumental": {
+   "vs_whole_db": 21.854876429128048,
+   "vs_truth_db": 13.008852831267054,
+   "whole_vs_truth_db": 14.455476854003514
+  },
+  "vocals": {
+   "vs_whole_db": 17.88680649317196,
+   "vs_truth_db": 10.118931880300881,
+   "whole_vs_truth_db": 11.729050041706348
+  }
+ },
+ "merge_report": {
+  "keys": [
+   "boundaries",
+   "chunks",
+   "warnings"
+  ],
+  "seams": 3,
+  "seams_flagged": 0,
+  "chunks": 4,
+  "chunks_flagged": 0,
+  "chunk_gain_db_range": [
+   0.0,
+   0.0
+  ],
+  "warnings": []
+ }
+}

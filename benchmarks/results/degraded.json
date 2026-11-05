@@ -1,0 +1,1138 @@
+{
+ "songs": {
+  "so_easy": {
+   "set": "quiet2",
+   "seams": 3,
+   "damage": {
+    "gain": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": -1.62,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 2.14,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 0.33,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 2.49,
+       "offset_ms": 0
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 16.038634815009544,
+        "vs_clean_seams_db": 20.201062588800156,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 15.42217385436815,
+        "vs_clean_seams_db": 18.99035724876772,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 3
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 54.22297161140126,
+        "vs_clean_seams_db": 55.37954392981483,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 54.3757467074558,
+        "vs_clean_seams_db": 55.137716011590776,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 63.97810163800618,
+        "vs_clean_seams_db": 65.38847222210939,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 63.94005550425752,
+        "vs_clean_seams_db": 65.43239221902735,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    },
+    "offset": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 0.0,
+       "offset_ms": 15
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.0,
+       "offset_ms": -13
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 0.0,
+       "offset_ms": -4
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 0.0,
+       "offset_ms": -24
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 0.5468558194630995,
+        "vs_clean_seams_db": 0.7512281593031955,
+        "whole_file_shift_ms": 12.97
+       },
+       "instrumental": {
+        "vs_clean_db": 0.34291827485177956,
+        "vs_clean_seams_db": 0.397178525635885,
+        "whole_file_shift_ms": -15.01
+       },
+       "flagged_seams": 3
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 17.96314530452404,
+        "vs_clean_seams_db": 21.430086021726133,
+        "whole_file_shift_ms": -14.99
+       },
+       "instrumental": {
+        "vs_clean_db": 23.618471423994528,
+        "vs_clean_seams_db": 27.424314674952473,
+        "whole_file_shift_ms": -14.99
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 18.185096594446396,
+        "vs_clean_seams_db": 21.371719125777865,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 23.644705002480052,
+        "vs_clean_seams_db": 27.360179439539397,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 1
+      }
+     }
+    },
+    "mp3": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 26.24179704601407,
+        "vs_clean_seams_db": 25.952590783835674,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 26.24594462229456,
+        "vs_clean_seams_db": 27.712609130087,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 26.39409847285148,
+        "vs_clean_seams_db": 26.079461405363045,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 26.37713877507508,
+        "vs_clean_seams_db": 27.791315364439093,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 26.393768349862164,
+        "vs_clean_seams_db": 26.079514715224402,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 26.37638736417893,
+        "vs_clean_seams_db": 27.79095961371496,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    },
+    "all": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": -0.12,
+       "offset_ms": -21
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": -0.77,
+       "offset_ms": -7
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 1.25,
+       "offset_ms": 25
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": -0.84,
+       "offset_ms": -21
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 0.9707434775985251,
+        "vs_clean_seams_db": 0.4521997231065057,
+        "whole_file_shift_ms": 21.0
+       },
+       "instrumental": {
+        "vs_clean_db": 0.8746297012237092,
+        "vs_clean_seams_db": 0.4598690917989898,
+        "whole_file_shift_ms": 21.0
+       },
+       "flagged_seams": 3
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 17.36441963120907,
+        "vs_clean_seams_db": 18.140937524027585,
+        "whole_file_shift_ms": 20.98
+       },
+       "instrumental": {
+        "vs_clean_db": 21.91744894352722,
+        "vs_clean_seams_db": 23.41595667870687,
+        "whole_file_shift_ms": 20.98
+       },
+       "flagged_seams": 1
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 17.373630239208396,
+        "vs_clean_seams_db": 18.177521460764023,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 21.907428735037996,
+        "vs_clean_seams_db": 23.436687309345068,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 2
+      }
+     }
+    }
+   }
+  },
+  "mallory": {
+   "set": "quiet2",
+   "seams": 3,
+   "damage": {
+    "gain": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": -1.89,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.28,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": -2.08,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 0.52,
+       "offset_ms": 0
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 17.990096014291698,
+        "vs_clean_seams_db": 23.44605927132037,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 17.970586499932736,
+        "vs_clean_seams_db": 21.808234999399577,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 3
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 62.64037710669563,
+        "vs_clean_seams_db": 62.25741243754154,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 67.08543138945025,
+        "vs_clean_seams_db": 68.19745961213854,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 63.97898985408196,
+        "vs_clean_seams_db": 63.53078398207069,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 72.20976922237782,
+        "vs_clean_seams_db": 72.86732202197065,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    },
+    "offset": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 0.0,
+       "offset_ms": 22
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.0,
+       "offset_ms": 17
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 0.0,
+       "offset_ms": 3
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 0.0,
+       "offset_ms": -12
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 0.43342369868307296,
+        "vs_clean_seams_db": 0.23394360786521684,
+        "whole_file_shift_ms": 12.0
+       },
+       "instrumental": {
+        "vs_clean_db": 0.841471074795278,
+        "vs_clean_seams_db": -0.2588050294281713,
+        "whole_file_shift_ms": 12.0
+       },
+       "flagged_seams": 3
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 16.303289803247857,
+        "vs_clean_seams_db": 18.32824747619622,
+        "whole_file_shift_ms": -21.95
+       },
+       "instrumental": {
+        "vs_clean_db": 17.805913975710062,
+        "vs_clean_seams_db": 20.193669007592877,
+        "whole_file_shift_ms": -21.97
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 16.300928215893894,
+        "vs_clean_seams_db": 18.311775122172584,
+        "whole_file_shift_ms": 0.02
+       },
+       "instrumental": {
+        "vs_clean_db": 18.18379113619883,
+        "vs_clean_seams_db": 20.16714346093245,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    },
+    "mp3": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 31.466202318816027,
+        "vs_clean_seams_db": 29.99703925625276,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 27.3019345442602,
+        "vs_clean_seams_db": 28.723863157452033,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 31.52931250930504,
+        "vs_clean_seams_db": 30.033585172237636,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 27.320385861439842,
+        "vs_clean_seams_db": 28.75314406932869,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 31.52877042957546,
+        "vs_clean_seams_db": 30.03350090414954,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 27.320398121629907,
+        "vs_clean_seams_db": 28.75293799449796,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    },
+    "all": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": -3.0,
+       "offset_ms": 15
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": -1.98,
+       "offset_ms": 18
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": -1.34,
+       "offset_ms": 12
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 2.23,
+       "offset_ms": 12
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 1.9861965739937435,
+        "vs_clean_seams_db": 2.1666932949006155,
+        "whole_file_shift_ms": -12.0
+       },
+       "instrumental": {
+        "vs_clean_db": 1.954782971332538,
+        "vs_clean_seams_db": 2.167595991118171,
+        "whole_file_shift_ms": -12.0
+       },
+       "flagged_seams": 3
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 24.551605638547894,
+        "vs_clean_seams_db": 22.031728936171667,
+        "whole_file_shift_ms": -15.01
+       },
+       "instrumental": {
+        "vs_clean_db": 23.728276134384277,
+        "vs_clean_seams_db": 24.285898039730593,
+        "whole_file_shift_ms": -15.01
+       },
+       "flagged_seams": 1
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 16.184504134221577,
+        "vs_clean_seams_db": 18.05364072121376,
+        "whole_file_shift_ms": 0.02
+       },
+       "instrumental": {
+        "vs_clean_db": 17.707166447893194,
+        "vs_clean_seams_db": 19.64065549917605,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    }
+   }
+  },
+  "widow": {
+   "set": "quiet2",
+   "seams": 4,
+   "damage": {
+    "gain": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": -0.47,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": -1.65,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 1.03,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": -2.57,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part05.flac",
+       "gain_db": -1.87,
+       "offset_ms": 0
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 16.822588041373663,
+        "vs_clean_seams_db": 18.133346006521776,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 17.50804003484296,
+        "vs_clean_seams_db": 19.10039045324623,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 3
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 50.59450702377419,
+        "vs_clean_seams_db": 52.68590686160428,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 51.36851535236594,
+        "vs_clean_seams_db": 53.360639976293676,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 1
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 63.63596295669964,
+        "vs_clean_seams_db": 63.23561001212062,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 64.83354021068263,
+        "vs_clean_seams_db": 65.08358581490552,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 1
+      }
+     }
+    },
+    "offset": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 0.0,
+       "offset_ms": 10
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.0,
+       "offset_ms": 18
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 0.0,
+       "offset_ms": -11
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 0.0,
+       "offset_ms": 6
+      },
+      {
+       "part": "mix_part05.flac",
+       "gain_db": 0.0,
+       "offset_ms": -20
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 0.8311346751481126,
+        "vs_clean_seams_db": 1.1194687191352506,
+        "whole_file_shift_ms": -6.01
+       },
+       "instrumental": {
+        "vs_clean_db": 0.3882414978714497,
+        "vs_clean_seams_db": 0.5232010904922392,
+        "whole_file_shift_ms": 11.0
+       },
+       "flagged_seams": 4
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 65.37298442019613,
+        "vs_clean_seams_db": 62.922833995441074,
+        "whole_file_shift_ms": -10.0
+       },
+       "instrumental": {
+        "vs_clean_db": 50.011133493307625,
+        "vs_clean_seams_db": 67.44437088739213,
+        "whole_file_shift_ms": -10.0
+       },
+       "flagged_seams": 1
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 43.87978744374452,
+        "vs_clean_seams_db": 44.497342072766834,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 41.68527100730636,
+        "vs_clean_seams_db": 42.05486333293734,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 1
+      }
+     }
+    },
+    "mp3": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part05.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 24.201107448093104,
+        "vs_clean_seams_db": 25.2885926174563,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 22.35022344116503,
+        "vs_clean_seams_db": 22.654448786075253,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 1
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 24.220141295067258,
+        "vs_clean_seams_db": 25.316969754919043,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 22.39981321267001,
+        "vs_clean_seams_db": 22.707252970050753,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 1
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 24.220749433867326,
+        "vs_clean_seams_db": 25.317294706136426,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 22.40059794462526,
+        "vs_clean_seams_db": 22.70788081048661,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 1
+      }
+     }
+    },
+    "all": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 1.12,
+       "offset_ms": 28
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 1.28,
+       "offset_ms": -8
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 2.72,
+       "offset_ms": -8
+      },
+      {
+       "part": "mix_part04.flac",
+       "gain_db": 3.0,
+       "offset_ms": -28
+      },
+      {
+       "part": "mix_part05.flac",
+       "gain_db": -1.87,
+       "offset_ms": 20
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 1.1329221504202855,
+        "vs_clean_seams_db": 2.066754531675879,
+        "whole_file_shift_ms": 8.0
+       },
+       "instrumental": {
+        "vs_clean_db": 1.313657577426721,
+        "vs_clean_seams_db": 2.9979708729130197,
+        "whole_file_shift_ms": 8.0
+       },
+       "flagged_seams": 4
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 23.758660636110744,
+        "vs_clean_seams_db": 24.9537625603972,
+        "whole_file_shift_ms": -28.0
+       },
+       "instrumental": {
+        "vs_clean_db": 21.747716942999187,
+        "vs_clean_seams_db": 22.34698084336085,
+        "whole_file_shift_ms": -28.0
+       },
+       "flagged_seams": 1
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 23.764352276198977,
+        "vs_clean_seams_db": 24.974694032712314,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 21.788680656209053,
+        "vs_clean_seams_db": 22.363374967526912,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 1
+      }
+     }
+    }
+   }
+  },
+  "demucs_test": {
+   "set": "quiet2",
+   "seams": 2,
+   "damage": {
+    "gain": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": -1.57,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": -1.69,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 2.78,
+       "offset_ms": 0
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 17.006529383884544,
+        "vs_clean_seams_db": 22.27660906385917,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 12.511243773007534,
+        "vs_clean_seams_db": 13.829160472175026,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 1
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 30.12560084128779,
+        "vs_clean_seams_db": 33.64547397838602,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 58.38613217197265,
+        "vs_clean_seams_db": 62.913090527582796,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 29.564729211361303,
+        "vs_clean_seams_db": 33.90072311421135,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 58.548764218622196,
+        "vs_clean_seams_db": 63.18048060177396,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    },
+    "offset": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 0.0,
+       "offset_ms": -18
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.0,
+       "offset_ms": -21
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 0.0,
+       "offset_ms": 16
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 2.0707245026013847,
+        "vs_clean_seams_db": 3.3126657579976997,
+        "whole_file_shift_ms": 13.85
+       },
+       "instrumental": {
+        "vs_clean_db": 0.9421260871330933,
+        "vs_clean_seams_db": 0.9644150414239084,
+        "whole_file_shift_ms": -15.85
+       },
+       "flagged_seams": 2
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 10.008560988337772,
+        "vs_clean_seams_db": 17.06961863018704,
+        "whole_file_shift_ms": 18.0
+       },
+       "instrumental": {
+        "vs_clean_db": 18.89018156335078,
+        "vs_clean_seams_db": 24.663348006550017,
+        "whole_file_shift_ms": 18.0
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 10.00574628104771,
+        "vs_clean_seams_db": 17.09398126287704,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 18.89339418239579,
+        "vs_clean_seams_db": 24.695843235740952,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    },
+    "mp3": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": 0.0,
+       "offset_ms": 0
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 13.889024896850312,
+        "vs_clean_seams_db": 19.599092616176275,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 23.403528628984517,
+        "vs_clean_seams_db": 25.84962321351609,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 13.889024896850312,
+        "vs_clean_seams_db": 19.599092616176275,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 23.403528628984517,
+        "vs_clean_seams_db": 25.84962321351609,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 13.889310171878456,
+        "vs_clean_seams_db": 19.603889807446578,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 23.403289869280442,
+        "vs_clean_seams_db": 25.84972220458322,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    },
+    "all": {
+     "applied": [
+      {
+       "part": "mix_part01.flac",
+       "gain_db": 2.84,
+       "offset_ms": 4
+      },
+      {
+       "part": "mix_part02.flac",
+       "gain_db": 0.91,
+       "offset_ms": -8
+      },
+      {
+       "part": "mix_part03.flac",
+       "gain_db": -1.35,
+       "offset_ms": -16
+      }
+     ],
+     "handling": {
+      "off": {
+       "vocals": {
+        "vs_clean_db": 3.9703615330769155,
+        "vs_clean_seams_db": 10.650743496821104,
+        "whole_file_shift_ms": 8.0
+       },
+       "instrumental": {
+        "vs_clean_db": 0.7476084351390149,
+        "vs_clean_seams_db": 0.6501352709752275,
+        "whole_file_shift_ms": -3.99
+       },
+       "flagged_seams": 2
+      },
+      "default": {
+       "vocals": {
+        "vs_clean_db": 11.191523306268877,
+        "vs_clean_seams_db": 17.61086635167925,
+        "whole_file_shift_ms": -3.99
+       },
+       "instrumental": {
+        "vs_clean_db": 17.882671005933442,
+        "vs_clean_seams_db": 22.266504024450544,
+        "whole_file_shift_ms": -3.99
+       },
+       "flagged_seams": 0
+      },
+      "anchor": {
+       "vocals": {
+        "vs_clean_db": 11.179296301884419,
+        "vs_clean_seams_db": 17.60358843576977,
+        "whole_file_shift_ms": 0.0
+       },
+       "instrumental": {
+        "vs_clean_db": 17.880205009971633,
+        "vs_clean_seams_db": 22.204689847147417,
+        "whole_file_shift_ms": 0.0
+       },
+       "flagged_seams": 0
+      }
+     }
+    }
+   }
+  }
+ },
+ "summary": {
+  "gain": {
+   "off": {
+    "stems_scored": 8,
+    "vs_clean_db": 16.408736552088854,
+    "vs_clean_seams_db": 19.723152513011254
+   },
+   "default": {
+    "stems_scored": 8,
+    "vs_clean_db": 53.599910275550435,
+    "vs_clean_seams_db": 55.44715541686906
+   },
+   "anchor": {
+    "stems_scored": 8,
+    "vs_clean_db": 60.086239102011156,
+    "vs_clean_seams_db": 61.57742124852369
+   }
+  },
+  "offset": {
+   "off": {
+    "stems_scored": 8,
+    "vs_clean_db": 0.7996119538184088,
+    "vs_clean_seams_db": 0.880411984053153
+   },
+   "default": {
+    "stems_scored": 8,
+    "vs_clean_db": 27.4967101215836,
+    "vs_clean_seams_db": 32.43456108750475
+   },
+   "anchor": {
+    "stems_scored": 8,
+    "vs_clean_db": 23.847339982939193,
+    "vs_clean_seams_db": 26.944105881593057
+   }
+  },
+  "mp3": {
+   "off": {
+    "stems_scored": 8,
+    "vs_clean_db": 24.387470368309728,
+    "vs_clean_seams_db": 25.72223244510642
+   },
+   "default": {
+    "stems_scored": 8,
+    "vs_clean_db": 24.44168045653044,
+    "vs_clean_seams_db": 25.76630557075383
+   },
+   "anchor": {
+    "stems_scored": 8,
+    "vs_clean_db": 24.441658960612244,
+    "vs_clean_seams_db": 25.76696259452996
+   }
+  },
+  "all": {
+   "off": {
+    "stems_scored": 8,
+    "vs_clean_db": 1.6188628025264316,
+    "vs_clean_seams_db": 2.701495284163689
+   },
+   "default": {
+    "stems_scored": 8,
+    "vs_clean_db": 20.26779027987259,
+    "vs_clean_seams_db": 21.88157936981557
+   },
+   "anchor": {
+    "stems_scored": 8,
+    "vs_clean_db": 18.473157975078156,
+    "vs_clean_seams_db": 20.806856534206915
+   }
+  }
+ }
+}

@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "seamsplit"
+version = "1.0.0"
+description = "Split audio into overlapping chunks for AI stem separation, then merge them back with a crossfade."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "ndhn27" }
+]
+keywords = ["audio", "crossfade", "stem-separation", "vocal-remover", "pyav", "ffmpeg"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Environment :: Console",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy>=1.24",
+    "av>=14.0",  # PyAV: its wheels carry FFmpeg, so there is nothing else to install
+]
+
+[project.optional-dependencies]
+dev = [
+    # pydub (and audioop on Python 3.13+) only for tests/test_audio_vs_pydub.py, which
+    # compares seamsplit.audio with pydub; the test skips without them
+    "pydub>=0.25.1",
+    "audioop-lts>=0.2.1; python_version>='3.13'",
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=26,<27",  # same major as .pre-commit-config.yaml: its style only changes yearly
+    "flake8>=7.0",
+    "mypy>=1.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/ndhn27/seamsplit"
+Issues = "https://github.com/ndhn27/seamsplit/issues"
+
+[project.scripts]
+seamsplit = "seamsplit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+seamsplit = ["py.typed", "static/*.html", "static/*.js"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["seamsplit"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:"]
+
+[tool.mypy]
+files = ["src"]
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+module = ["av", "av.*"]
+ignore_missing_imports = true
+# newer PyAV ships type information, older does not; the code must check the same either way
+follow_imports = "skip"

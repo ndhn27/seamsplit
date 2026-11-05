@@ -1,0 +1,60 @@
+{
+ "date": "2026-11-01",
+ "python": "3.13.17",
+ "platform": "Linux-6.18.44-fc-v185-x86_64-with-glibc2.39",
+ "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+ "cpu_threads": 2,
+ "memory_gb": 7.8,
+ "numpy": "2.5.3",
+ "seamsplit": "0.1.0",
+ "audio_engine": {
+  "pyav": "19.0.2",
+  "ffmpeg": "9.0.2"
+ },
+ "pydub": "installed",
+ "ffmpeg_on_path": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+ "separator": {
+  "name": "audio-separator / UVR-MDX-NET-Voc_FT.onnx",
+  "model_sha256": "534b2070fcc7df514b13ef660dc8cbb328679c2374d04354a5c42bb14ecce111",
+  "load_seconds": null,
+  "speed": {
+   "files_timed": 59,
+   "audio_seconds": 542.4,
+   "work_seconds": 1041.2,
+   "times_real_time": 0.52
+  },
+  "versions": {
+   "audio-separator": "0.48.0",
+   "onnxruntime": "1.31.1",
+   "torch": "2.15.0",
+   "numpy": "2.5.4"
+  }
+ },
+ "songs": {
+  "so_easy": {
+   "title": "Cristina Vane - So Easy",
+   "seconds": 30.0,
+   "has_truth": true
+  },
+  "mallory": {
+   "title": "The Mountaineering Club - Mallory",
+   "seconds": 30.0,
+   "has_truth": true
+  },
+  "widow": {
+   "title": "Triviul feat. The Fiend - Widow",
+   "seconds": 30.0,
+   "has_truth": true
+  },
+  "slow_motion_dream": {
+   "title": "Slow Motion Dream (excerpt) - Steven M Bryant, ft. CSoul, Alex Beroza & Robert Siekawitch",
+   "seconds": 10.88,
+   "has_truth": false
+  },
+  "demucs_test": {
+   "title": "test.mp3 of the Demucs repository",
+   "seconds": 20.0,
+   "has_truth": false
+  }
+ }
+}

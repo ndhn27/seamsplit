@@ -1,0 +1,323 @@
+"""
+Merge the chunks of a split back into one file: read the manifest, find each
+part's processed file, crossfade neighbours across their overlap and write the
+result, with a report of every seam.
+
+The work is split over small modules, and this one is the entry point
+(:func:`merge_audio`) that ties them together:
+
+* :mod:`seamsplit.manifest` and :mod:`seamsplit.checks` read the manifest and
+  check the options;
+* :mod:`seamsplit.matching` pairs parts with the files that came back, and
+  :mod:`seamsplit.pairing` confirms that pairing by comparing the files with the original
+  chunks when their names were lost;
+* :mod:`seamsplit.crossfade` merges (its docstring explains alignment, level
+  matching, seam search and the fade curves) on top of :mod:`seamsplit.dsp`;
+* :mod:`seamsplit.anchor` compares each chunk with the original it was made from and
+  merges both stems of a service together, :mod:`seamsplit.plan` holds a merge that has
+  been set up and :mod:`seamsplit.audition` plays its seams in the ways they can be joined;
+* :mod:`seamsplit.report` holds what was found.
+
+The names of those modules that a merge uses are re-exported here, so they can be imported
+from this one too.
+"""
+
+from __future__ import annotations
+
+import os
+from typing import Callable, Optional
+
+from .anchor import DEFAULT_RECON_WARN_DB, other_output_path
+from .audio import AudioSegment, CouldntDecodeError, CouldntEncodeError
+from .audition import AuditionOptions, export_auditions
+
+from .crossfade import (  # noqa: F401  (the defaults are part of this module's interface)
+    DEFAULT_MAX_GAIN_DB,
+    DEFAULT_MAX_LAG_MS,
+    DEFAULT_METHOD,
+    DEFAULT_SEAM_FADE_MS,
+    DEFAULT_SEAM_WARN_DB,
+    METHODS,
+    _crossfade_merge,
+)
+from .pairing import PAIRING_MODES, check_pairing
+from .plan import DEFAULT_LENGTH_TOLERANCE_MS, MergePlan, _check_part_length  # noqa: F401
+from .splitter import export_segment
+
+# Re-exports: each name is defined in the module it is imported from.
+from .report import (  # noqa: F401
+    BoundaryInfo,
+    ChunkInfo,
+    MergeReport,
+    format_time,
+    _emit,
+)
+from .checks import (  # noqa: F401
+    _JSON_TYPE_NAMES,
+    _check_merge_options,
+    _check_number,
+    _check_samplerate,
+    _check_threshold,
+    _describe,
+    _number_problem,
+)
+from .manifest import (  # noqa: F401
+    load_manifest,
+    _part_name_problem,
+)
+from .matching import (  # noqa: F401
+    AUDIO_EXTENSIONS,
+    PairedFiles,
+    find_original_chunks,
+    find_processed_file,
+    find_processed_files,
+    pair_processed_files,
+    _ambiguous,
+    _filtered_by,
+    _list_files,
+    _named_list,
+    _natural_key,
+    _stem_matches,
+)
+from .dsp import (  # noqa: F401
+    LEVEL_DEADBAND_DB,
+    MIN_ALIGN_CORRELATION,
+    estimate_lag,
+    find_seam,
+    match_db,
+    _DTYPES,
+    _MATCH_CAP_DB,
+    _SEAM_FLOOR_DB,
+    _SEAM_GUARD_FRAC,
+    _SEAM_TIE,
+    _SLERP_EPS,
+    _adaptive_gains,
+    _equal_power_gains,
+    _fade_gains,
+    _level_ratio,
+    _linear_gains,
+    _ncc,
+    _overlapping_parts,
+    _to_int_array,
+    _to_mono,
+)
+from .crossfade import (  # noqa: F401
+    adaptive_crossfade_merge,
+    equal_power_crossfade_merge,
+    linear_crossfade_merge,
+)
+
+_HOW_TO_CHECK = (
+    " (the original chunks, next to the manifest or in --originals, would let "
+    "seamsplit check that by comparing them with the files)"
+)
+
+
+def merge_audio(
+    processed_dir: str,
+    manifest_path: str,
+    output_path: str,
+    overlap_s: Optional[float] = None,
+    match: Optional[str] = None,
+    method: str = DEFAULT_METHOD,
+    bitrate: str = "320k",
+    samplerate: int = 44100,
+    align: bool = True,
+    max_lag_ms: float = DEFAULT_MAX_LAG_MS,
+    match_level: bool = True,
+    max_gain_db: float = DEFAULT_MAX_GAIN_DB,
+    seam_search: bool = False,
+    seam_fade_ms: float = DEFAULT_SEAM_FADE_MS,
+    seam_warn_db: Optional[float] = DEFAULT_SEAM_WARN_DB,
+    length_tolerance_ms: float = DEFAULT_LENGTH_TOLERANCE_MS,
+    report: Optional[MergeReport] = None,
+    progress: Optional[Callable[[int, int, str], None]] = None,
+    anchor: bool = False,
+    originals_dir: Optional[str] = None,
+    other_match: Optional[str] = None,
+    other_output: Optional[str] = None,
+    recon_warn_db: Optional[float] = DEFAULT_RECON_WARN_DB,
+    audition: Optional[AuditionOptions] = None,
+    pairing: str = "auto",
+) -> AudioSegment:
+    """Load the manifest written by
+    :func:`seamsplit.splitter.split_audio`, locate each part's processed
+    counterpart in ``processed_dir``, merge them with a crossfade, export
+    to ``output_path``, and return the merged ``AudioSegment``.
+
+    With ``align=True`` (default) any timing offset of up to ``max_lag_ms``
+    between neighboring chunks is measured and cancelled. With
+    ``match_level=True`` (default) each chunk is scaled so its overlap is as
+    loud as the previous chunk's, by at most ``max_gain_db`` either way.
+    ``method="adaptive"`` (default) shapes every crossfade from the measured
+    correlation of the overlap. With ``seam_search=True`` (experimental, off by
+    default; see the module docstring) the crossfade is ``seam_fade_ms`` long
+    and placed where the two chunks agree best instead of spanning the whole
+    overlap. Either way, seams where the chunks agree to less than
+    ``seam_warn_db`` are flagged in the report. An overlap of 0 simply
+    concatenates the chunks. Integrity problems (a chunk whose length
+    differs from the manifest by more than ``length_tolerance_ms``, a merged
+    length that doesn't match the source, chunks that can't be aligned) are
+    appended to ``report.warnings`` if a :class:`MergeReport` is given, and
+    raised as :class:`RuntimeWarning` otherwise.
+
+    ``anchor=True`` compares every processed chunk with the original chunk it was
+    made from (the files ``split`` wrote, in ``originals_dir``, by default next to the
+    manifest) and takes its place in time from that, not from its neighbours; with both
+    stems (``other_match``) it takes its level from it too, and says in
+    ``report.chunks`` how well the stems add up to the original (flagged below
+    ``recon_warn_db``). ``other_match`` names the second stem the way ``match`` names
+    the first (``match="instrumental", other_match="vocals"``): the two are then
+    merged together, with the same offsets, gains and fades, and the second goes to
+    ``other_output`` (by default ``output_path`` with the word added). See
+    :mod:`seamsplit.anchor`.
+
+    ``pairing`` says what is done about which file is which chunk. Files are found by
+    the part names in their names; when the names were lost they can only be paired with the
+    parts by order, which is a guess. ``"auto"`` (default) then compares each file with
+    the original chunk it was paired with (the files ``split`` wrote, found next to the
+    manifest or in ``originals_dir`` if they are there), puts files that clearly belong
+    elsewhere in their place and says what it did in ``report``; a set of files that
+    cannot be fitted to the parts at all is a :class:`ValueError`. ``"verify"`` does that
+    for files found by name as well (and needs the originals), ``"off"`` never does. See
+    :mod:`seamsplit.pairing`.
+
+    ``audition`` (see :class:`seamsplit.audition.AuditionOptions`) also writes, for the
+    seams it selects, the audio around them joined in each of the three ways, so they can
+    be compared by ear; it needs a ``report`` to read the seams from.
+
+    Raises :class:`ValueError`, before any file is read, for an unknown
+    ``method`` or a numeric option outside its range: ``samplerate`` must be a
+    whole number greater than 0; ``overlap_s``, ``max_lag_ms``, ``max_gain_db``
+    and ``length_tolerance_ms`` must be finite and not negative; ``seam_fade_ms``
+    must be finite and greater than 0; ``seam_warn_db`` and ``recon_warn_db`` must not
+    be NaN.
+
+    ``progress(i, n, name)`` is called as chunk ``i`` of ``n`` (1-based, ``name``
+    the file) is about to be read. An exception it raises stops the merge before
+    anything is written, so it is also the way to cancel one."""
+    if method not in METHODS:
+        raise ValueError(f"Unknown method: {method!r} (choose from {', '.join(METHODS)})")
+    # Check every number before anything is read or decoded, whatever the caller
+    # (CLI, GUI or library) did or did not check. max_lag_ms is checked even
+    # when align is off: a value that can never be valid is a mistake either way.
+    samplerate = _check_samplerate(samplerate)
+    _check_merge_options(max_lag_ms, max_gain_db, seam_fade_ms, seam_warn_db)
+    _check_number("length_tolerance_ms", length_tolerance_ms)
+    _check_threshold("recon_warn_db", recon_warn_db)
+    if overlap_s is not None:
+        _check_number("overlap_s", overlap_s)
+    if other_match is not None and not other_match.strip():
+        raise ValueError("other_match must not be empty")
+    if other_match is None and other_output is not None:
+        raise ValueError("other_output needs other_match: which files are the other stem?")
+    if pairing not in PAIRING_MODES:
+        raise ValueError(f"Unknown pairing: {pairing!r} (choose from {', '.join(PAIRING_MODES)})")
+    if originals_dir is not None and not anchor and pairing == "off":
+        raise ValueError(
+            "originals_dir is only used with anchor=True or when the pairing is checked "
+            "(pairing='auto' or 'verify')"
+        )
+    if audition is not None and report is None:
+        raise ValueError("audition needs a MergeReport (report=...) to read the seams from")
+    if other_match is not None and other_output is None:
+        other_output = other_output_path(output_path, other_match)
+    if other_output is not None and os.path.abspath(other_output) == os.path.abspath(output_path):
+        raise ValueError("other_output must not be the same file as the output")
+
+    manifest = load_manifest(manifest_path)
+
+    if overlap_s is not None:
+        overlap_ms = overlap_s * 1000
+        if abs(overlap_ms - float(manifest["overlap_ms"])) > 0.5:
+            _emit(
+                report,
+                f"overlap override ({overlap_ms:.0f} ms) differs from the manifest "
+                f"({float(manifest['overlap_ms']):.0f} ms); chunks were cut with the latter",
+            )
+    else:
+        overlap_ms = float(manifest["overlap_ms"])
+    part_names = manifest["parts"]
+    paired = pair_processed_files(processed_dir, part_names, match)
+    other_paired = None
+    if other_match is not None:
+        other_paired = pair_processed_files(processed_dir, part_names, other_match)
+        if [os.path.abspath(p) for p in other_paired.paths] == [
+            os.path.abspath(p) for p in paired.paths
+        ]:
+            raise ValueError(
+                f"'{match}' and '{other_match}' pick out the same files: the two stems "
+                "need names that tell them apart"
+            )
+    folder = originals_dir or os.path.dirname(os.path.abspath(manifest_path))
+    original_paths = find_original_chunks(folder, part_names) if anchor else None
+    sets = [(paired, match or "")] + ([(other_paired, other_match or "")] if other_paired else [])
+    to_check = [
+        (files, what)
+        for files, what in sets
+        if pairing == "verify" or (pairing == "auto" and files.by_order)
+    ]
+    reference = original_paths
+    if to_check and reference is None:
+        try:
+            reference = find_original_chunks(folder, part_names)
+        except FileNotFoundError:
+            if pairing == "verify":
+                raise
+    for files, _ in sets:
+        if files.by_order and (reference is None or pairing == "off"):
+            _emit(report, files.order_note + (_HOW_TO_CHECK if pairing == "auto" else ""))
+    if reference is not None:
+        for files, what in to_check:
+            files.paths = check_pairing(
+                files.paths,
+                reference,
+                part_names,
+                report,
+                what if other_paired else "",
+            )
+    paths = paired.paths
+    other_paths = other_paired.paths if other_paired else None
+
+    plan = MergePlan(
+        manifest,
+        overlap_ms,
+        paths,
+        other_paths,
+        original_paths,
+        method=method,
+        align=align,
+        max_lag_ms=max_lag_ms,
+        match_level=match_level,
+        max_gain_db=max_gain_db,
+        seam_search=seam_search,
+        seam_fade_ms=seam_fade_ms,
+        seam_warn_db=seam_warn_db,
+        length_tolerance_ms=length_tolerance_ms,
+        recon_warn_db=recon_warn_db,
+    )
+    main, other = plan.split(plan.merge(report=report, progress=progress))
+
+    source_len = manifest.get("source_length_ms")
+    if isinstance(source_len, (int, float)) and abs(len(main) - source_len) > length_tolerance_ms:
+        _emit(
+            report,
+            f"merged audio is {len(main) / 1000:.2f}s but the source was "
+            f"{source_len / 1000:.2f}s ({len(main) - source_len:+.0f} ms) — "
+            "a chunk may be missing, cut short or padded",
+        )
+
+    fmt = os.path.splitext(output_path)[1].lstrip(".") or "mp3"
+    merged = main.set_frame_rate(samplerate)
+    export_segment(merged, output_path, fmt, bitrate)
+    if other is not None and other_output is not None:
+        fmt_other = os.path.splitext(other_output)[1].lstrip(".") or "mp3"
+        export_segment(other.set_frame_rate(samplerate), other_output, fmt_other, bitrate)
+
+    if audition is not None and report is not None:
+        try:
+            export_auditions(plan, report, audition, manifest.get("source_file"))
+        except (OSError, ValueError, CouldntDecodeError, CouldntEncodeError) as exc:
+            # the merged files are written and good: do not fail them over the extras
+            _emit(report, f"could not prepare the listening kit: {exc}")
+    return merged

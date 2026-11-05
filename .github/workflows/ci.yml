@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        include:
+          # the program is shipped for Windows and macOS too (release.yml builds it there, on 3.12)
+          - {os: windows-latest, python-version: "3.12"}
+          - {os: macos-latest, python-version: "3.12"}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      # style and types do not depend on the system: not repeated on Windows and macOS
+      - name: Lint
+        if: runner.os == 'Linux'
+        run: flake8 src tests benchmarks
+
+      - name: Format check
+        if: runner.os == 'Linux'
+        run: black --check src tests benchmarks
+
+      - name: Type check
+        if: runner.os == 'Linux'
+        run: mypy
+
+      - name: Test
+        if: runner.os == 'Linux'
+        run: pytest -v --cov --cov-report=term-missing --cov-fail-under=90
+
+      # on Windows and macOS the tests alone: the coverage gate is measured on Linux, where
+      # the tests that need a POSIX shell run too
+      - name: Test (Windows, macOS)
+        if: runner.os != 'Linux'
+        run: pytest -v
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build and check the distribution
+        run: |
+          pip install build twine
+          python -m build
+          twine check dist/*

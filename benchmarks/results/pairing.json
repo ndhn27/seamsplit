@@ -1,0 +1,2424 @@
+{
+ "songs": {
+  "so_easy": {
+   "fixed2": {
+    "chunks": 4,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.6724057262922901,
+        0.6800497185556958,
+        0.7168471091149908,
+        0.7062163028121553
+       ],
+       "runner_up": [
+        0.03971337005378909,
+        0.028040843730251317,
+        0.025272036556070944,
+        0.03736902693830328
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         0,
+         3,
+         1,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.6751278931988,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         0,
+         3,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.4739977726679827,
+         "warnings": 8
+        }
+       },
+       {
+        "order": [
+         2,
+         0,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.2079961596410316,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.0996013472831456,
+         "warnings": 4
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.8999476843114019,
+        0.8894962035277625,
+        0.8942638626089316,
+        0.8195625699263025
+       ],
+       "runner_up": [
+        0.036749746115402625,
+        0.03446198573180201,
+        0.032728811994309125,
+        0.03656400903333896
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         1,
+         2,
+         0,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.9621881049309007,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         3,
+         2,
+         1,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.018556276561279,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         3,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.79713668261267,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         3,
+         0,
+         1,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0387273094235576,
+         "warnings": 5
+        }
+       }
+      ]
+     }
+    }
+   },
+   "quiet2": {
+    "chunks": 4,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.6678054967228203,
+        0.6866613649239183,
+        0.7101833005460304,
+        0.7020369398247354
+       ],
+       "runner_up": [
+        0.03878514732016858,
+        0.031882680960763056,
+        0.029233684563455983,
+        0.03671812624807706
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         1,
+         2,
+         3,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.88494485578625,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         0,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.7713736848905506,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         3,
+         0,
+         2,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.9611608551666575,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         0,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.7713736848905506,
+         "warnings": 6
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.899653809332657,
+        0.8890738510500542,
+        0.8951623825400422,
+        0.8194853939759186
+       ],
+       "runner_up": [
+        0.030554283240085887,
+        0.039506458590379635,
+        0.03994889293228846,
+        0.039137016061132714
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         3,
+         0,
+         1,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.1116239698139623,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         3,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0727539325539857,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         1,
+         3,
+         2,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.002092392763009,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         3,
+         1,
+         2,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.052520120770072,
+         "warnings": 5
+        }
+       }
+      ]
+     }
+    }
+   },
+   "voice2": {
+    "chunks": 4,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.6952512094992098,
+        0.675975023221876,
+        0.7025433139204897,
+        0.703834301792108
+       ],
+       "runner_up": [
+        0.03747389244451593,
+        0.03338796236765476,
+        0.03391690779811852,
+        0.036228419590282224
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         0,
+         3,
+         2,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.232648217945893,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         1,
+         3,
+         2,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.8695442952959893,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -0.7410720906116524,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         1,
+         3,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.9795148531112408,
+         "warnings": 8
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.8989664716228458,
+        0.8903893392060032,
+        0.894654490285134,
+        0.8199509067989559
+       ],
+       "runner_up": [
+        0.03370424977986074,
+        0.04298419762490509,
+        0.03873237184905101,
+        0.03390052639604173
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         3,
+         2,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.992670425842423,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         3,
+         1,
+         2,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.030127112564864,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         3,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0472309741190777,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         3,
+         2,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.992670425842423,
+         "warnings": 7
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  "mallory": {
+   "fixed2": {
+    "chunks": 4,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.6903666929301256,
+        0.8067478876889825,
+        0.7948998104487777,
+        0.7937760375156935
+       ],
+       "runner_up": [
+        0.03472676249329168,
+        0.046610769029087035,
+        0.030205403086203408,
+        0.04469094191635979
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         3,
+         2,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.1464582281042004,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         3,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.641270533830215,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         3,
+         1,
+         2,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.7836413415168075,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         0,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.784268961072217,
+         "warnings": 5
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.8928600432573467,
+        0.9182563148570768,
+        0.848865960400617,
+        0.8976640013652059
+       ],
+       "runner_up": [
+        0.10293246550005657,
+        0.1177093607770496,
+        0.12488239569620371,
+        0.09202671398327622
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         2,
+         1,
+         3,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.919333251443954,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         2,
+         1,
+         3,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.919333251443954,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         3,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -0.9362989186041673,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         2,
+         0,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.392209807996709,
+         "warnings": 5
+        }
+       }
+      ]
+     }
+    }
+   },
+   "quiet2": {
+    "chunks": 4,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.718225353361529,
+        0.807571276623558,
+        0.7834241928675383,
+        0.7947061304456166
+       ],
+       "runner_up": [
+        0.04749369898588274,
+        0.05317979864610973,
+        0.05116264063121157,
+        0.0450144745046983
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         1,
+         2,
+         0,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.33092567960696,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         3,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.7300821388855496,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         3,
+         0,
+         2,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0014744031813487,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         3,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.6020676040899815,
+         "warnings": 6
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.8786161832443397,
+        0.9197580116591847,
+        0.8489577400379822,
+        0.8896205498698948
+       ],
+       "runner_up": [
+        0.10986438652437527,
+        0.12874232150077908,
+        0.11449606301128994,
+        0.1288805142058688
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         1,
+         0,
+         3,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.8209972060227977,
+         "warnings": 8
+        }
+       },
+       {
+        "order": [
+         2,
+         0,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.140931964088229,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": 1.1436742945965008,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         2,
+         3,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.6344226081228945,
+         "warnings": 4
+        }
+       }
+      ]
+     }
+    }
+   },
+   "voice2": {
+    "chunks": 4,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.6878211691195188,
+        0.8047344843927782,
+        0.8074660833803214,
+        0.7844474531343741
+       ],
+       "runner_up": [
+        0.06326941806101051,
+        0.04344003012425804,
+        0.052575600340386865,
+        0.04691067730151862
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         0,
+         2,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -0.20827347024803902,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         2,
+         3,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0928983635012135,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         2,
+         0,
+         3,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.9059651560767765,
+         "warnings": 8
+        }
+       },
+       {
+        "order": [
+         0,
+         1,
+         3,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": 0.6112383450854473,
+         "warnings": 5
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.8936408744704827,
+        0.918179570596012,
+        0.8550292471341787,
+        0.8963154336819255
+       ],
+       "runner_up": [
+        0.10969439630033823,
+        0.14066923711464457,
+        0.14257857078018316,
+        0.07749919454075146
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         2,
+         3,
+         1,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.7825720660357787,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         1,
+         0,
+         3,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.785274900668384,
+         "warnings": 8
+        }
+       },
+       {
+        "order": [
+         2,
+         1,
+         3,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.668121707569764,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         0,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.779711672987977,
+         "warnings": 6
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  "widow": {
+   "fixed2": {
+    "chunks": 4,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.6642502215388626,
+        0.6951053532156767,
+        0.7285048104253589,
+        0.680442960749955
+       ],
+       "runner_up": [
+        0.045008796415093394,
+        0.024502400649564153,
+        0.035109129765224616,
+        0.02572847345373843
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         0,
+         3,
+         2,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.6576321037107298,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         3,
+         0,
+         2,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.11088685322577,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         3,
+         1,
+         2,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.057003331736463,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -0.9788123926661757,
+         "warnings": 4
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.9167480672396507,
+        0.9197096076865878,
+        0.9249896054250331,
+        0.9472305671174934
+       ],
+       "runner_up": [
+        0.23316927174124355,
+        0.20860567325064885,
+        0.24319617792172657,
+        0.2044396772873126
+       ],
+       "right_part": 4,
+       "sure": 4,
+       "chunks": 4
+      },
+      "trials": [
+       {
+        "order": [
+         2,
+         0,
+         3,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.1065662632062843,
+         "warnings": 8
+        }
+       },
+       {
+        "order": [
+         0,
+         3,
+         1,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.8784356805288565,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         3,
+         2,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.1609112738933516,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         3,
+         0,
+         1,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.3766528449452435,
+         "warnings": 5
+        }
+       }
+      ]
+     }
+    }
+   },
+   "quiet2": {
+    "chunks": 5,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.6750592011487507,
+        0.6831927129955015,
+        0.7063771150428529,
+        0.7246476744254807,
+        0.6574569362238543
+       ],
+       "runner_up": [
+        0.03328224485038967,
+        0.030060788299060188,
+        0.028522316381665146,
+        0.03186891450353104,
+        0.03222360519665427
+       ],
+       "right_part": 5,
+       "sure": 5,
+       "chunks": 5
+      },
+      "trials": [
+       {
+        "order": [
+         4,
+         2,
+         0,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0224626815731326,
+         "warnings": 9
+        }
+       },
+       {
+        "order": [
+         4,
+         0,
+         1,
+         2,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.017206582734981,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         2,
+         0,
+         3,
+         1,
+         4
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.9351487468858597,
+         "warnings": 9
+        }
+       },
+       {
+        "order": [
+         1,
+         4,
+         3,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.1333599618630843,
+         "warnings": 10
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.9137968551133853,
+        0.917496895715066,
+        0.9343704274203294,
+        0.9279042164332854,
+        0.9475950151624637
+       ],
+       "runner_up": [
+        0.20679531639283416,
+        0.258100858366701,
+        0.2847490097946796,
+        0.26927121635564166,
+        0.27395603550677716
+       ],
+       "right_part": 5,
+       "sure": 5,
+       "chunks": 5
+      },
+      "trials": [
+       {
+        "order": [
+         4,
+         3,
+         1,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.134086501645746,
+         "warnings": 10
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         1,
+         3,
+         4
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": 1.0146154151490876,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         3,
+         1,
+         0,
+         4,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.098980539211884,
+         "warnings": 9
+        }
+       },
+       {
+        "order": [
+         2,
+         4,
+         0,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.081778582972805,
+         "warnings": 9
+        }
+       }
+      ]
+     }
+    }
+   },
+   "voice2": {
+    "chunks": 5,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.6714177395726052,
+        0.6918511756012813,
+        0.7056029901152736,
+        0.7257856222508607,
+        0.6336992731489839
+       ],
+       "runner_up": [
+        0.03698044807588784,
+        0.029618820944403525,
+        0.030044592882950104,
+        0.033136476032057216,
+        0.029904365161655067
+       ],
+       "right_part": 5,
+       "sure": 5,
+       "chunks": 5
+      },
+      "trials": [
+       {
+        "order": [
+         2,
+         3,
+         0,
+         1,
+         4
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.918640648834396,
+         "warnings": 7
+        }
+       },
+       {
+        "order": [
+         4,
+         2,
+         3,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0355100467851583,
+         "warnings": 8
+        }
+       },
+       {
+        "order": [
+         3,
+         0,
+         4,
+         1,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.226613027511273,
+         "warnings": 9
+        }
+       },
+       {
+        "order": [
+         4,
+         2,
+         1,
+         3,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 2
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0642258181831,
+         "warnings": 9
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.9144317781890247,
+        0.9180002358995746,
+        0.9340450929299421,
+        0.9278017663300646,
+        0.9486430551106732
+       ],
+       "runner_up": [
+        0.23300641673933625,
+        0.1832422704638869,
+        0.2749684525057411,
+        0.28211605631102293,
+        0.2268118461436505
+       ],
+       "right_part": 5,
+       "sure": 5,
+       "chunks": 5
+      },
+      "trials": [
+       {
+        "order": [
+         1,
+         0,
+         3,
+         2,
+         4
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.7057600985573083,
+         "warnings": 9
+        }
+       },
+       {
+        "order": [
+         3,
+         0,
+         2,
+         1,
+         4
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.726709157613385,
+         "warnings": 8
+        }
+       },
+       {
+        "order": [
+         1,
+         3,
+         0,
+         4,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.191291957295518,
+         "warnings": 10
+        }
+       },
+       {
+        "order": [
+         2,
+         4,
+         0,
+         1,
+         3
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.1998157383413446,
+         "warnings": 9
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  "slow_motion_dream": {},
+  "demucs_test": {
+   "fixed2": {
+    "chunks": 3,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.15932778513415624,
+        0.15704163845681995,
+        0.137101870588226
+       ],
+       "runner_up": [
+        0.0327689796140204,
+        0.03455901560694193,
+        0.03276739200736328
+       ],
+       "right_part": 3,
+       "sure": 2,
+       "chunks": 3
+      },
+      "trials": [
+       {
+        "order": [
+         2,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "refused",
+         "error": "the processed files do not fit the parts: 'download (01).flac', 'download (02).flac' all belong to part 1 ('mix_part01.flac'); nothing was found for part 3. 'seamsplit status' shows which chunk each file is; --pairing off merges them in the order they were paired anyway"
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0213123027796134,
+         "warnings": 6
+        }
+       },
+       {
+        "order": [
+         1,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 4
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.41053280836789,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "refused",
+         "error": "the processed files do not fit the parts: 'download (02).flac', 'download (03).flac' all belong to part 2 ('mix_part02.flac'); nothing was found for part 3. 'seamsplit status' shows which chunk each file is; --pairing off merges them in the order they were paired anyway"
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": 5.974645496697066,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "refused",
+         "error": "the processed files do not fit the parts: 'download (02).flac', 'download (03).flac' all belong to part 2 ('mix_part02.flac'); nothing was found for part 3. 'seamsplit status' shows which chunk each file is; --pairing off merges them in the order they were paired anyway"
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": 5.974645496697066,
+         "warnings": 5
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.999658188890916,
+        0.999881560667122,
+        0.9999972739608779
+       ],
+       "runner_up": [
+        0.08430160658878852,
+        0.11549307276616279,
+        0.11568542314735596
+       ],
+       "right_part": 3,
+       "sure": 3,
+       "chunks": 3
+      },
+      "trials": [
+       {
+        "order": [
+         2,
+         1,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.9348516590628093,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.7494923681522079,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         2,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.009661267414428,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         2,
+         1,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.9348516590628093,
+         "warnings": 5
+        }
+       }
+      ]
+     }
+    }
+   },
+   "quiet2": {
+    "chunks": 3,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.15794083193987424,
+        0.1904862125663261,
+        0.11073382890480082
+       ],
+       "runner_up": [
+        0.03371167360402019,
+        0.037487494848547624,
+        0.03517014336200825
+       ],
+       "right_part": 3,
+       "sure": 2,
+       "chunks": 3
+      },
+      "trials": [
+       {
+        "order": [
+         2,
+         1,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "refused",
+         "error": "the processed files do not fit the parts: 'download (01).flac', 'download (03).flac' all belong to part 1 ('mix_part01.flac'); nothing was found for part 3. 'seamsplit status' shows which chunk each file is; --pairing off merges them in the order they were paired anyway"
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.154978901839532,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 4
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.8272145820688404,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 4
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.8272145820688404,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 4
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.8272145820688404,
+         "warnings": 5
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.9999437190685964,
+        0.9999016823270698,
+        0.9999981517957062
+       ],
+       "runner_up": [
+        0.09954772003134191,
+        0.19230694765357703,
+        0.19231572696863866
+       ],
+       "right_part": 3,
+       "sure": 3,
+       "chunks": 3
+      },
+      "trials": [
+       {
+        "order": [
+         2,
+         1,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.023147717388392,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0531213572805638,
+         "warnings": 4
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0531213572805638,
+         "warnings": 4
+        }
+       },
+       {
+        "order": [
+         0,
+         2,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.728907047679245,
+         "warnings": 3
+        }
+       }
+      ]
+     }
+    }
+   },
+   "voice2": {
+    "chunks": 3,
+    "stems": {
+     "vocals": {
+      "scores": {
+       "true": [
+        0.1596109671796328,
+        0.14527231885235145,
+        0.13505841826998358
+       ],
+       "runner_up": [
+        0.0377195316940826,
+        0.03385968554282587,
+        0.029981454808227184
+       ],
+       "right_part": 3,
+       "sure": 1,
+       "chunks": 3
+      },
+      "trials": [
+       {
+        "order": [
+         1,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "refused",
+         "error": "the processed files do not fit the parts: 'download (01).flac', 'download (02).flac' all belong to part 1 ('mix_part01.flac'); nothing was found for part 2. 'seamsplit status' shows which chunk each file is; --pairing off merges them in the order they were paired anyway"
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.9664805202117255,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "refused",
+         "error": "the processed files do not fit the parts: 'download (01).flac', 'download (02).flac' all belong to part 1 ('mix_part01.flac'); nothing was found for part 2. 'seamsplit status' shows which chunk each file is; --pairing off merges them in the order they were paired anyway"
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.9664805202117255,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         2,
+         1,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "refused",
+         "error": "the processed files do not fit the parts: 'download (01).flac', 'download (03).flac' all belong to part 1 ('mix_part01.flac'); nothing was found for part 3. 'seamsplit status' shows which chunk each file is; --pairing off merges them in the order they were paired anyway"
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.0350895832851372,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         2,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "refused",
+         "error": "the processed files do not fit the parts: 'download (01).flac', 'download (03).flac' all belong to part 1 ('mix_part01.flac'); nothing was found for part 3. 'seamsplit status' shows which chunk each file is; --pairing off merges them in the order they were paired anyway"
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.031518911809201,
+         "warnings": 6
+        }
+       }
+      ]
+     },
+     "instrumental": {
+      "scores": {
+       "true": [
+        0.999573754334856,
+        0.9999968878326881,
+        0.9999972321710779
+       ],
+       "runner_up": [
+        0.07846690380954069,
+        0.191837489341263,
+        0.1918452194760733
+       ],
+       "right_part": 3,
+       "sure": 3,
+       "chunks": 3
+      },
+      "trials": [
+       {
+        "order": [
+         0,
+         2,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.3822191015526752,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         2,
+         1,
+         0
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -2.9424609632438044,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         2,
+         0,
+         1
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -3.265524348417552,
+         "warnings": 5
+        }
+       },
+       {
+        "order": [
+         1,
+         0,
+         2
+        ],
+        "in_order": false,
+        "auto": {
+         "result": "identical",
+         "vs_right_db": null,
+         "warnings": 1
+        },
+        "off": {
+         "result": "different",
+         "vs_right_db": -1.6199876538698257,
+         "warnings": 5
+        }
+       }
+      ]
+     }
+    }
+   }
+  }
+ },
+ "summary": {
+  "vocals": {
+   "chunks": 47,
+   "right_part_of_best_score": 47,
+   "sure_by_thresholds": 43,
+   "true_score_min": 0.11073382890480082,
+   "true_score_median": 0.6918511756012813,
+   "runner_up_max": 0.06326941806101051,
+   "margin_min": 0.07556368554279258,
+   "thresholds": {
+    "min_ncc": 0.15,
+    "min_margin": 0.08
+   },
+   "shuffled_trials": 48,
+   "pairing_auto": {
+    "identical": 40,
+    "refused": 8
+   },
+   "pairing_off": {
+    "different": 48
+   }
+  },
+  "instrumental": {
+   "chunks": 47,
+   "right_part_of_best_score": 47,
+   "sure_by_thresholds": 47,
+   "true_score_min": 0.8194853939759186,
+   "true_score_median": 0.9167480672396507,
+   "runner_up_max": 0.2847490097946796,
+   "margin_min": 0.6456857100190416,
+   "thresholds": {
+    "min_ncc": 0.15,
+    "min_margin": 0.08
+   },
+   "shuffled_trials": 48,
+   "pairing_auto": {
+    "identical": 48
+   },
+   "pairing_off": {
+    "different": 48
+   }
+  }
+ }
+}

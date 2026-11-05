@@ -1,0 +1,80 @@
+name: Release programs
+
+# One self-contained program per system (Python, numpy, PyAV with its FFmpeg inside),
+# built with PyInstaller from packaging/seamsplit.spec. A tag like v1.0.0 (it must be the
+# package version) builds them and attaches them to a release, with a BUILD_INFO file per system
+# and the notices of what is inside; "Run workflow" builds them as downloadable artifacts only.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-22.04, name: linux-x86_64, exe: seamsplit}
+          - {os: windows-latest, name: windows-x86_64, exe: seamsplit.exe}
+          - {os: macos-latest, name: macos-arm64, exe: seamsplit}
+          - {os: macos-15-intel, name: macos-x86_64, exe: seamsplit}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build
+        run: |
+          pip install . pyinstaller
+          pyinstaller packaging/seamsplit.spec --noconfirm
+
+      - name: The tag is the package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          version="v$(python -c 'import seamsplit; print(seamsplit.__version__)')"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "tag $GITHUB_REF_NAME is not the package version $version" >&2
+            exit 1
+          fi
+
+      - name: Smoke test (split and merge with no ffmpeg on PATH)
+        run: python packaging/smoke_test.py dist/${{ matrix.exe }}
+
+      - name: Name and checksum
+        shell: bash
+        run: |
+          mkdir out
+          cp dist/${{ matrix.exe }} out/seamsplit-${{ matrix.name }}${{ endsWith(matrix.exe, '.exe') && '.exe' || '' }}
+          python -X utf8 packaging/build_info.py > out/BUILD_INFO-${{ matrix.name }}.txt
+          cd out && (sha256sum * 2>/dev/null || shasum -a 256 *) > SHA256SUMS-${{ matrix.name }}.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: seamsplit-${{ matrix.name }}
+          path: out/*
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Licence and notices go with the programs
+        run: cp LICENSE THIRD_PARTY_NOTICES.md out/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: out/*

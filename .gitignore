@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# OS
+.DS_Store
+
+# Tool working directories / audio artifacts
+chunks/
+processed/
+*.job/
+*.mp3
+*.wav
+*.flac
+*.m4a
+*.ogg
+*.opus
+
+# Editors
+.idea/
+.vscode/
+
+# Benchmarks: the music they download, what the model separated, and trial runs
+benchmarks/corpus/
+benchmarks/cache/
+benchmarks/cache-fake/
+benchmarks/results-fake/

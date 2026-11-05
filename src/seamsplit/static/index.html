@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SeamSplit</title>
+<style>
+:root {
+  --bg: #f5f6f8; --card: #fff; --text: #1d2230; --muted: #5d6578; --line: #d9dde6;
+  --accent: #2f6fed; --accent-text: #fff; --ok: #1a7f4b; --warn: #a15c00; --err: #b3261e;
+  --drop: #eef3ff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171f; --card: #1c212c; --text: #e8ebf2; --muted: #9aa3b5; --line: #323a4b;
+    --accent: #5b94ff; --accent-text: #0c1220; --ok: #5fd39a; --warn: #f0b252; --err: #ff8a80;
+    --drop: #212a3d;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, "Segoe UI", sans-serif; }
+main { max-width: 820px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h1 { margin: 0; font-size: 26px; }
+header .spacer { flex: 1; }
+h2 { margin: 0 0 4px; font-size: 18px; }
+p { margin: 6px 0; }
+.muted { color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-top: 16px; }
+.drop { display: block; border: 2px dashed var(--line); border-radius: 10px; padding: 26px 12px; text-align: center; cursor: pointer; margin: 12px 0; }
+.drop.over { border-color: var(--accent); background: var(--drop); }
+.drop strong { display: block; word-break: break-all; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 12px 0; }
+label.field { display: block; font-size: 13px; color: var(--muted); }
+input[type=number], input[type=text], select {
+  display: block; width: 100%; margin-top: 4px; padding: 7px 9px; font: inherit; color: var(--text);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+}
+label.check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; margin: 10px 0 4px; }
+label.check input { margin-top: 4px; }
+details { margin: 8px 0; }
+summary { cursor: pointer; color: var(--muted); }
+button, a.btn {
+  display: inline-block; font: inherit; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--text); text-decoration: none;
+}
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: .5; cursor: default; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+progress { width: 100%; height: 10px; margin-top: 12px; }
+.status { margin-top: 8px; min-height: 1.4em; }
+.error { color: var(--err); } .good { color: var(--ok); } .warn { color: var(--warn); }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+ul.files { margin: 8px 0; padding-left: 20px; color: var(--muted); font-size: 13px; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>SeamSplit</h1>
+    <span class="muted" id="version"></span>
+    <span class="spacer"></span>
+    <button id="lang" type="button">VI</button>
+    <button id="quit" type="button" data-i18n="quit">Quit</button>
+  </header>
+  <p class="muted" data-i18n="tagline"></p>
+
+  <section class="card" id="split-card">
+    <h2 data-i18n="splitTitle"></h2>
+    <label class="drop" id="drop-split">
+      <input type="file" id="file-split" accept="audio/*,.mp3,.wav,.flac,.m4a,.ogg,.aac,.aiff" hidden>
+      <span id="drop-split-text" data-i18n="dropSplit"></span>
+    </label>
+    <div class="grid">
+      <label class="field" id="service-field" hidden><span data-i18n="service"></span>
+        <select id="service"></select>
+        <span id="service-note" class="muted"></span></label>
+      <label class="field"><span data-i18n="limit"></span>
+        <input type="number" id="limit" min="1" step="any" value="59">
+        <span data-i18n="limitHint"></span></label>
+      <label class="field"><span data-i18n="format"></span>
+        <select id="format">
+          <option value="mp3" data-i18n="fmtMp3"></option>
+          <option value="flac" data-i18n="fmtFlac"></option>
+          <option value="wav" data-i18n="fmtWav"></option>
+        </select>
+        <span data-i18n="formatHint"></span></label>
+    </div>
+    <details>
+      <summary data-i18n="advanced"></summary>
+      <div class="grid">
+        <label class="field"><span data-i18n="overlap"></span>
+          <input type="number" id="overlap" min="0" step="any" value="4"></label>
+        <label class="field"><span data-i18n="beforeSlack"></span>
+          <input type="number" id="before" min="0" step="any" value="20"></label>
+        <label class="field"><span data-i18n="afterSlack"></span>
+          <input type="number" id="after" min="0" step="any" value="3"></label>
+      </div>
+    </details>
+    <div class="row"><button class="primary" id="split-btn" type="button" data-i18n="splitBtn"></button>
+      <button id="split-cancel" type="button" hidden data-i18n="cancel"></button></div>
+    <progress id="split-progress" hidden></progress>
+    <div class="status" id="split-status"></div>
+    <div id="split-result" hidden>
+      <table><thead><tr><th>#</th><th data-i18n="colName"></th>
+        <th class="num" data-i18n="colStart"></th><th class="num" data-i18n="colEnd"></th>
+        <th class="num" data-i18n="colLen"></th></tr></thead><tbody id="chunk-rows"></tbody></table>
+      <div class="row">
+        <a class="btn primary" id="zip-link" data-i18n="downloadZip"></a>
+        <button type="button" id="open-folder" data-i18n="openFolder"></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="merge-card">
+    <h2 data-i18n="mergeTitle"></h2>
+    <p class="muted" data-i18n="mergeIntro"></p>
+    <label class="drop" id="drop-merge">
+      <input type="file" id="file-merge" multiple hidden>
+      <span data-i18n="dropMerge"></span>
+    </label>
+    <div id="processed-info" hidden>
+      <span id="processed-count"></span>
+      <button type="button" id="clear-processed" data-i18n="clear"></button>
+      <ul class="files" id="processed-list"></ul>
+    </div>
+    <p class="muted" id="manifest-status"></p>
+    <div class="grid">
+      <label class="field"><span data-i18n="match"></span>
+        <input type="text" id="match" placeholder="instrumental">
+        <span data-i18n="matchHint"></span></label>
+      <label class="field"><span data-i18n="otherMatch"></span>
+        <input type="text" id="other-match" placeholder="vocals">
+        <span data-i18n="otherMatchHint"></span></label>
+      <label class="field"><span data-i18n="outFormat"></span>
+        <select id="out-format">
+          <option value="mp3">MP3</option><option value="flac">FLAC</option><option value="wav">WAV</option>
+        </select></label>
+      <label class="field"><span data-i18n="bitrate"></span>
+        <select id="bitrate"></select>
+        <span data-i18n="bitrateHint"></span></label>
+    </div>
+    <label class="check"><input type="checkbox" id="anchor">
+      <span><span data-i18n="anchor"></span><br><span class="muted" id="anchor-hint"></span></span></label>
+    <details>
+      <summary data-i18n="advanced"></summary>
+      <div class="grid">
+        <label class="field"><span data-i18n="method"></span>
+          <select id="method"></select></label>
+        <label class="field"><span data-i18n="samplerate"></span>
+          <select id="samplerate"><option value="44100">44100</option><option value="48000">48000</option></select></label>
+      </div>
+      <label class="check"><input type="checkbox" id="seam-search">
+        <span><span data-i18n="seamSearch"></span><br><span class="muted" data-i18n="seamSearchHint"></span></span></label>
+      <div class="grid">
+        <label class="field"><span data-i18n="seamFade"></span>
+          <input type="number" id="seam-fade" min="1" step="any" value="250" disabled></label>
+        <label class="field"><span data-i18n="auditionLabel"></span>
+          <select id="audition">
+            <option value="flagged" data-i18n="auditionFlagged"></option>
+            <option value="all" data-i18n="auditionAll"></option>
+            <option value="off" data-i18n="auditionOff"></option>
+          </select>
+          <span data-i18n="auditionHint"></span></label>
+      </div>
+    </details>
+    <div class="row"><button class="primary" id="merge-btn" type="button" data-i18n="mergeBtn"></button>
+      <button id="merge-cancel" type="button" hidden data-i18n="cancel"></button></div>
+    <progress id="merge-progress" hidden></progress>
+    <div class="status" id="merge-status"></div>
+    <div id="merge-result" hidden>
+      <div id="merge-summary"></div>
+      <div class="row" id="merged-links"></div>
+      <div class="row">
+        <a class="btn" id="report-md" hidden data-i18n="reportMd"></a>
+        <a class="btn" id="report-json" hidden data-i18n="reportJson"></a></div>
+    </div>
+  </section>
+
+  <section class="card" id="listen-card" hidden>
+    <h2 id="listen-title"></h2>
+    <div id="listen-root"></div>
+    <div class="row"><a class="btn" id="kit-zip" data-i18n="downloadKit"></a></div>
+  </section>
+
+  <p class="muted" id="workdir"></p>
+</main>
+
+<script>/*AUDITION_JS*/</script>
+<script>
+"use strict";
+const TEXT = {
+  en: {
+    tagline: "Split a long track into overlapping chunks for an AI stem separator, then merge the results back with a crossfade. Everything runs on this computer.",
+    quit: "Quit", quitDone: "SeamSplit has stopped. You can close this tab.",
+    splitTitle: "1. Split", dropSplit: "Drop a track here, or click to choose one",
+    service: "Service preset", serviceNone: "— none (set it yourself) —",
+    limit: "Your service's limit per file (seconds)", limitHint: "Chunks are cut so that none is longer than this.",
+    format: "Chunk format", formatHint: "FLAC and WAV avoid MP3's quality loss and encoder delay, if your service accepts them.",
+    fmtMp3: "MP3 (smallest)", fmtFlac: "FLAC (lossless, half the size of WAV)", fmtWav: "WAV (lossless)",
+    advanced: "Advanced", overlap: "Overlap (seconds)", beforeSlack: "Before-slack (seconds)", afterSlack: "After-slack (seconds)",
+    splitBtn: "Split", reading: "Reading and analysing…", exporting: "Exporting {i}/{n}: {name}",
+    splitDone: "Done: {n} chunks.", colName: "Chunk", colStart: "Start", colEnd: "End", colLen: "Length",
+    downloadZip: "Download all (.zip)", openFolder: "Open work folder",
+    mergeTitle: "2. Merge",
+    mergeIntro: "Send the chunks to your AI service, download what it returns, then drop those files here.",
+    dropMerge: "Drop the processed chunks here (and manifest.json, if you did not split in this session)",
+    files: "{n} processed file(s)", clear: "Clear", more: "… and {n} more",
+    manifestSplit: "Using the manifest from the split above.", manifestUploaded: "Using the manifest.json you dropped.",
+    manifestNone: "No manifest yet: split a track above, or drop its manifest.json here.",
+    match: "Only use files whose name contains (optional)", matchHint: "Services often return several files per chunk (vocals, instrumental…). Type a word from the name of the one you want.",
+    outFormat: "Output format", method: "Crossfade curve", samplerate: "Sample rate (Hz)",
+    mergeBtn: "Merge", merging: "Merging…", mergeDone: "Merged ({len}).", download: "Download {file}",
+    seams: "{n} seam(s); the chunks agree to {db} dB at worst.", seamsNone: "{n} seam(s).",
+    flagged: "{n} seam(s) worth a listen, at: {times}", workdir: "Work folder: {path}", error: "Error: {msg}",
+    needFile: "Drop a track first.",
+    cancel: "Cancel", cancelling: "Cancelling… the step in progress has to finish first.", cancelled: "Cancelled.",
+    readingPart: "Reading chunk {i}/{n}: {name}",
+    bitrate: "MP3 bitrate", bitrateHint: "Only used when the output is MP3.",
+    seamSearch: "Search for the best seam inside the overlap (experimental)",
+    seamSearchHint: "Instead of fading across the whole overlap, fade over a short stretch where the two chunks agree best.",
+    seamFade: "Seam fade length (ms)",
+    reportMd: "Seam report (.md)", reportJson: "Seam report (.json)",
+    otherMatch: "The other stem (optional)", otherMatchHint: "If the service also returned the other stem (say, vocals), type a word from its name: both are merged together with the same offsets, gains and fades, and you get two files.",
+    anchor: "Anchor to the original chunks",
+    anchorHint: "Takes each chunk's place in time (and, with the other stem, its level) from the original it was made from, not from its neighbours. Uses the chunks of the split above.",
+    anchorHintNone: "Needs the chunks of a split made in this session.",
+    anchorTime: "{n} of {total} chunk(s) placed in time by their originals; largest offset {ms} ms.",
+    anchorLevel: "Level taken from the originals on {n} chunk(s).",
+    anchorNoLevel: "The level was not taken from the originals: one stem alone is quieter than the mix, so it cannot say how loud it was. Give the other stem for that.",
+    anchorRecon: "The two stems add up to the original to {db} dB at worst (chunk {part}).",
+    anchorFlagged: "{n} chunk(s) worth a listen: {parts}",
+    auditionLabel: "Listening kit", auditionFlagged: "Seams worth a listen", auditionAll: "Every seam (up to 12, the worst first)", auditionOff: "None",
+    auditionHint: "Clips of each seam joined in three ways, to compare by ear.",
+    auditionMade: "Listening kit ready: {n} seam(s), below.",
+    auditionNone: "No seam was worth a listen, so there is no listening kit. Choose every seam under Advanced to listen anyway.",
+    auditioning: "Preparing the listening kit {i}/{n}: {name}",
+    downloadKit: "Download the listening kit (.zip)",
+  },
+  vi: {
+    tagline: "Chia bài dài thành các đoạn chồng lấp cho AI tách stem, rồi ghép kết quả lại bằng crossfade. Mọi thứ chạy ngay trên máy này.",
+    quit: "Thoát", quitDone: "SeamSplit đã dừng. Bạn có thể đóng tab này.",
+    splitTitle: "1. Chia", dropSplit: "Kéo thả bài hát vào đây, hoặc bấm để chọn",
+    service: "Preset dịch vụ", serviceNone: "— không (tự đặt) —",
+    limit: "Giới hạn mỗi file của dịch vụ (giây)", limitHint: "Các đoạn được cắt để không đoạn nào dài hơn mức này.",
+    format: "Định dạng đoạn", formatHint: "FLAC và WAV tránh được việc MP3 mất chất lượng và bị trễ do encoder, nếu dịch vụ của bạn nhận.",
+    fmtMp3: "MP3 (nhỏ nhất)", fmtFlac: "FLAC (không mất dữ liệu, nhỏ bằng nửa WAV)", fmtWav: "WAV (không mất dữ liệu)",
+    advanced: "Nâng cao", overlap: "Phần chồng lấp (giây)", beforeSlack: "Before-slack (giây)", afterSlack: "After-slack (giây)",
+    splitBtn: "Chia", reading: "Đang đọc và phân tích…", exporting: "Đang xuất {i}/{n}: {name}",
+    splitDone: "Xong: {n} đoạn.", colName: "Đoạn", colStart: "Bắt đầu", colEnd: "Kết thúc", colLen: "Độ dài",
+    downloadZip: "Tải tất cả (.zip)", openFolder: "Mở thư mục làm việc",
+    mergeTitle: "2. Ghép",
+    mergeIntro: "Gửi các đoạn cho dịch vụ AI, tải kết quả về, rồi kéo thả các file đó vào đây.",
+    dropMerge: "Kéo thả các đoạn đã xử lý vào đây (cùng manifest.json nếu bạn không chia trong phiên này)",
+    files: "{n} file đã xử lý", clear: "Xóa", more: "… và {n} file nữa",
+    manifestSplit: "Đang dùng manifest từ bước chia ở trên.", manifestUploaded: "Đang dùng manifest.json bạn vừa thả.",
+    manifestNone: "Chưa có manifest: hãy chia một bài ở trên, hoặc thả manifest.json của nó vào đây.",
+    match: "Chỉ dùng file có tên chứa (tùy chọn)", matchHint: "Dịch vụ thường trả nhiều file cho mỗi đoạn (vocals, instrumental…). Gõ một từ có trong tên file bạn muốn.",
+    outFormat: "Định dạng đầu ra", method: "Đường cong crossfade", samplerate: "Tần số lấy mẫu (Hz)",
+    mergeBtn: "Ghép", merging: "Đang ghép…", mergeDone: "Đã ghép ({len}).", download: "Tải {file}",
+    seams: "{n} mối nối; các đoạn khớp nhau ít nhất {db} dB.", seamsNone: "{n} mối nối.",
+    flagged: "{n} mối nối nên nghe lại, tại: {times}", workdir: "Thư mục làm việc: {path}", error: "Lỗi: {msg}",
+    needFile: "Hãy thả một bài hát trước.",
+    cancel: "Hủy", cancelling: "Đang hủy… bước đang chạy cần xong trước.", cancelled: "Đã hủy.",
+    readingPart: "Đang đọc đoạn {i}/{n}: {name}",
+    bitrate: "Bitrate MP3", bitrateHint: "Chỉ dùng khi đầu ra là MP3.",
+    seamSearch: "Tìm mối nối tốt nhất trong phần chồng lấp (thử nghiệm)",
+    seamSearchHint: "Thay vì làm mờ chéo trên toàn bộ phần chồng lấp, chỉ làm mờ trên một đoạn ngắn nơi hai đoạn khớp nhau nhất.",
+    seamFade: "Độ dài đoạn làm mờ ở mối nối (ms)",
+    reportMd: "Báo cáo mối nối (.md)", reportJson: "Báo cáo mối nối (.json)",
+    otherMatch: "Stem còn lại (tùy chọn)", otherMatchHint: "Nếu dịch vụ cũng trả stem còn lại (ví dụ vocals), gõ một từ trong tên của nó: hai stem được ghép cùng nhau với cùng độ lệch, gain và crossfade, và bạn nhận hai file.",
+    anchor: "Neo vào các chunk gốc",
+    anchorHint: "Lấy vị trí thời gian của mỗi chunk (và mức âm, nếu có stem còn lại) từ chính chunk gốc của nó, không từ chunk bên cạnh. Dùng các chunk của bước chia ở trên.",
+    anchorHintNone: "Cần các chunk của một lần chia trong phiên này.",
+    anchorTime: "{n}/{total} chunk được đặt đúng thời gian theo chunk gốc; lệch lớn nhất {ms} ms.",
+    anchorLevel: "Đã lấy mức âm từ chunk gốc cho {n} chunk.",
+    anchorNoLevel: "Mức âm không được lấy từ chunk gốc: một stem riêng lẻ nhỏ hơn bản mix nên không cho biết bản mix to cỡ nào. Hãy đưa stem còn lại nếu muốn vậy.",
+    anchorRecon: "Hai stem cộng lại khớp bản gốc {db} dB ở chỗ tệ nhất (chunk {part}).",
+    anchorFlagged: "{n} chunk nên nghe lại: {parts}",
+    auditionLabel: "Bộ nghe thử", auditionFlagged: "Các mối nối nên nghe lại", auditionAll: "Mọi mối nối (tối đa 12, tệ nhất trước)", auditionOff: "Không làm",
+    auditionHint: "Đoạn âm thanh quanh mỗi mối nối, nối theo ba cách, để so bằng tai.",
+    auditionMade: "Bộ nghe thử đã sẵn sàng: {n} mối nối, ở bên dưới.",
+    auditionNone: "Không có mối nối nào đáng nghe lại nên không có bộ nghe thử. Chọn mọi mối nối trong phần Nâng cao nếu vẫn muốn nghe.",
+    auditioning: "Đang chuẩn bị bộ nghe thử {i}/{n}: {name}",
+    downloadKit: "Tải bộ nghe thử (.zip)",
+  },
+};
+
+const $ = (id) => document.getElementById(id);
+const token = new URLSearchParams(location.search).get("t") || "";
+let lang = "en";
+try { lang = localStorage.getItem("lang") || ""; } catch (e) { /* storage may be blocked */ }
+if (lang !== "en" && lang !== "vi") lang = (navigator.language || "en").slice(0, 2) === "vi" ? "vi" : "en";
+let info = null, state = null, mergeResult = null, busy = false, running = null; // running = {id, kind}
+let listening = null; // {created, lang}: the kit the listening card shows
+
+function t(key, vars) {
+  let s = TEXT[lang][key] ?? TEXT.en[key] ?? key;
+  for (const k in vars || {}) s = s.replace("{" + k + "}", () => String(vars[k])); // a file name may contain "$&"
+  return s;
+}
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  $("lang").textContent = lang === "vi" ? "EN" : "VI";
+  if (info) {
+    $("workdir").textContent = t("workdir", { path: info.workdir });
+    $("version").textContent = "v" + info.version;
+  }
+  render();
+}
+
+async function api(path, opts) {
+  const { method = "GET", params = {}, json, body } = opts || {};
+  const query = new URLSearchParams({ ...params, t: token });
+  const init = { method };
+  if (json !== undefined) { init.body = JSON.stringify(json); init.headers = { "Content-Type": "application/json" }; }
+  else if (body !== undefined) init.body = body;
+  const res = await fetch(path + "?" + query, init);
+  let data = {};
+  try { data = await res.json(); } catch (e) { /* not JSON */ }
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+function showError(el, err) { el.className = "status error"; el.textContent = t("error", { msg: err.message || err }); }
+function fmtTime(s) { const m = Math.floor(s / 60); return m + ":" + (s - m * 60).toFixed(1).padStart(4, "0"); }
+function fmtLen(ms) { return fmtTime(ms / 1000); }
+
+function dropzone(zone, input, onFiles) {
+  ["dragenter", "dragover"].forEach((n) => zone.addEventListener(n, (e) => { e.preventDefault(); zone.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((n) => zone.addEventListener(n, (e) => { e.preventDefault(); zone.classList.remove("over"); }));
+  zone.addEventListener("drop", (e) => onFiles(Array.from(e.dataTransfer.files)));
+  input.addEventListener("change", () => { onFiles(Array.from(input.files)); input.value = ""; });
+}
+// a file dropped next to the zones must not make the browser navigate to it
+["dragover", "drop"].forEach((n) => window.addEventListener(n, (e) => e.preventDefault()));
+
+async function refresh() {
+  state = await api("/api/state");
+  render();
+}
+
+function render() {
+  if (!state) return;
+  const inp = state.input[0];
+  $("drop-split-text").textContent = "";
+  if (inp) {
+    const strong = document.createElement("strong");
+    strong.textContent = inp.name;
+    $("drop-split-text").append(strong, document.createTextNode(t("dropSplit")));
+  } else $("drop-split-text").textContent = t("dropSplit");
+
+  const split = state.split;
+  $("split-result").hidden = !split;
+  if (split) {
+    const rows = $("chunk-rows");
+    rows.textContent = "";
+    split.segments.forEach((seg, i) => {
+      const tr = document.createElement("tr");
+      const cells = [String(i + 1), seg.name, fmtTime(seg.start_ms / 1000), fmtTime(seg.end_ms / 1000),
+                     ((seg.end_ms - seg.start_ms) / 1000).toFixed(2) + " s"];
+      cells.forEach((text, c) => {
+        const td = document.createElement("td");
+        if (c >= 2) td.className = "num";
+        td.textContent = text;
+        tr.append(td);
+      });
+      rows.append(tr);
+    });
+    $("zip-link").href = "/download/chunks.zip?t=" + encodeURIComponent(token);
+  }
+
+  const n = state.processed.length;
+  $("processed-info").hidden = n === 0;
+  $("processed-count").textContent = t("files", { n });
+  const list = $("processed-list");
+  list.textContent = "";
+  state.processed.slice(0, 8).forEach((f) => { const li = document.createElement("li"); li.textContent = f.name; list.append(li); });
+  if (n > 8) { const li = document.createElement("li"); li.textContent = t("more", { n: n - 8 }); list.append(li); }
+  $("manifest-status").textContent =
+    state.manifest === "uploaded" ? t("manifestUploaded") : state.manifest === "split" ? t("manifestSplit") : t("manifestNone");
+
+  const out = state.merged[0];
+  $("merge-result").hidden = !out;
+  if (out) {
+    const links = $("merged-links");
+    links.textContent = "";
+    state.merged.forEach((file, i) => {
+      const a = document.createElement("a");
+      a.className = i === 0 ? "btn primary" : "btn";
+      a.textContent = t("download", { file: file.name });
+      a.href = "/download/merged/" + encodeURIComponent(file.name) + "?t=" + encodeURIComponent(token);
+      links.append(a);
+    });
+    [["report-md", "_report.md"], ["report-json", "_report.json"]].forEach(([id, suffix]) => {
+      const name = (state.reports || []).find((r) => r.endsWith(suffix));
+      $(id).hidden = !name;
+      if (name) $(id).href = "/download/merged/" + encodeURIComponent(name) + "?t=" + encodeURIComponent(token);
+    });
+    const box = $("merge-summary");
+    box.textContent = "";
+    if (mergeResult && mergeResult.file === out.name) {
+      const lines = [[t("mergeDone", { len: fmtLen(mergeResult.length_ms) }), "good"]];
+      lines.push([mergeResult.worst_match_db === null ? t("seamsNone", { n: mergeResult.seams })
+                  : t("seams", { n: mergeResult.seams, db: mergeResult.worst_match_db }), ""]);
+      if (mergeResult.flagged.length) lines.push([t("flagged", { n: mergeResult.flagged.length, times: mergeResult.flagged.join(", ") }), "warn"]);
+      const a = mergeResult.anchor;
+      if (a) {
+        if (a.in_time) lines.push([t("anchorTime", { n: a.in_time, total: a.chunks, ms: a.largest_offset_ms === null ? "–" : (a.largest_offset_ms > 0 ? "+" : "") + a.largest_offset_ms }), ""]);
+        if (a.in_level) lines.push([t("anchorLevel", { n: a.in_level }), ""]);
+        else if (a.worst_recon_db === null) lines.push([t("anchorNoLevel"), "muted"]);
+        if (a.worst_recon_db !== null) lines.push([t("anchorRecon", { db: a.worst_recon_db, part: a.worst_recon_chunk }), ""]);
+        if (a.flagged.length) lines.push([t("anchorFlagged", { n: a.flagged.length, parts: a.flagged.join(", ") }), "warn"]);
+      }
+      if (mergeResult.audition) {
+        lines.push([mergeResult.audition.length ? t("auditionMade", { n: mergeResult.audition.length }) : t("auditionNone"), mergeResult.audition.length ? "" : "muted"]);
+      }
+      mergeResult.warnings.forEach((w) => lines.push([w, "warn"]));
+      lines.forEach(([text, cls]) => { const p = document.createElement("p"); p.className = cls; p.textContent = text; box.append(p); });
+    }
+  }
+  $("split-btn").disabled = busy || !inp;
+  $("merge-btn").disabled = busy || n === 0 || !state.manifest;
+  $("split-cancel").hidden = !(running && running.kind === "split");
+  $("merge-cancel").hidden = !(running && running.kind === "merge");
+  $("bitrate").disabled = $("out-format").value !== "mp3";
+  $("seam-fade").disabled = !$("seam-search").checked;
+  const hasOriginals = state.chunks.length > 0;
+  $("anchor").disabled = !hasOriginals;
+  if (!hasOriginals) $("anchor").checked = false;
+  $("anchor-hint").textContent = t(hasOriginals ? "anchorHint" : "anchorHintNone");
+  refreshListening();
+}
+
+// The listening card: the kit of the last merge, with the answers given so far.
+async function refreshListening() {
+  const card = $("listen-card");
+  if (!state.audition) { card.hidden = true; listening = null; return; }
+  if (listening && listening.lang === lang) { card.hidden = listening.pending; return; }
+  const mine = listening = { lang, pending: true };
+  let data;
+  try { data = await api("/api/audition"); } catch (e) { if (listening === mine) listening = null; return; }
+  if (listening !== mine) return; // another refresh took over
+  if (!data.kit) { card.hidden = true; listening = null; return; }
+  mine.pending = false;
+  card.hidden = false;
+  $("listen-title").textContent = t("listenTitle");
+  $("kit-zip").href = "/download/audition.zip?t=" + encodeURIComponent(token);
+  const initial = {};
+  data.choices.forEach((c) => { initial[c.seam] = { choice: c.choice, blind: c.blind, at: c.at }; });
+  const player = SeamAudition.mount($("listen-root"), data.kit, {
+    t,
+    initial,
+    url: (file) => "/audition/" + encodeURIComponent(file) + "?t=" + encodeURIComponent(token),
+    docHref: () => "/download/audition/choices.json?t=" + encodeURIComponent(token),
+    save: (seam, choice, blind) => api("/api/audition-choice", { method: "POST", json: { seam, choice, blind } }),
+  });
+  player.refresh(data.summary);
+}
+
+function setBusy(value) { busy = value; render(); }
+
+async function watch(jobId, kind) {
+  const bar = $(kind + "-progress"), status = $(kind + "-status");
+  bar.hidden = false;
+  bar.removeAttribute("value");
+  status.className = "status";
+  status.textContent = t(kind === "split" ? "reading" : "merging");
+  for (;;) {
+    const job = await api("/api/job", { params: { id: jobId } });
+    if (job.progress) {
+      bar.max = job.progress.n; bar.value = job.progress.i;
+      status.textContent = t(kind === "split" ? "exporting" : job.progress.phase === "audition" ? "auditioning" : "readingPart", job.progress);
+    }
+    if (job.cancelling) status.textContent = t("cancelling");
+    if (job.state === "running") { await new Promise((r) => setTimeout(r, 400)); continue; }
+    bar.hidden = true;
+    if (job.state === "error") throw new Error(job.error);
+    if (job.state === "cancelled") return null;
+    return job.result;
+  }
+}
+
+async function run(kind, payload) {
+  const status = $(kind + "-status");
+  listening = null; // the job replaces the kit
+  $("listen-card").hidden = true;
+  $("listen-root").textContent = "";
+  setBusy(true);
+  try {
+    const { job } = await api("/api/" + kind, { method: "POST", json: payload });
+    running = { id: job, kind };
+    render();
+    const result = await watch(job, kind);
+    status.textContent = "";
+    if (result === null) {
+      status.textContent = t("cancelled");
+      return;
+    }
+    if (kind === "merge") mergeResult = result;
+    if (kind === "split") {
+      mergeResult = null;
+      await refresh();
+      status.className = "status good";
+      status.textContent = t("splitDone", { n: state.split ? state.split.parts.length : 0 });
+      (result.warnings || []).forEach((w) => { status.textContent += " " + w; status.className = "status warn"; });
+    }
+  } catch (err) {
+    $(kind + "-progress").hidden = true;
+    showError(status, err);
+  } finally {
+    busy = false;
+    running = null;
+    await refresh().catch(() => {});
+  }
+}
+
+dropzone($("drop-split"), $("file-split"), async (files) => {
+  if (!files.length) return;
+  const status = $("split-status");
+  try {
+    await api("/api/upload", { method: "POST", params: { area: "input", name: files[0].name }, body: files[0] });
+    status.textContent = "";
+    await refresh();
+  } catch (err) { showError(status, err); }
+});
+
+dropzone($("drop-merge"), $("file-merge"), async (files) => {
+  const status = $("merge-status");
+  try {
+    for (const file of files) {
+      const area = file.name.toLowerCase().endsWith(".json") ? "manifest" : "processed";
+      await api("/api/upload", { method: "POST", params: { area, name: file.name }, body: file });
+    }
+    status.textContent = "";
+    await refresh();
+  } catch (err) { showError(status, err); await refresh().catch(() => {}); }
+});
+
+function setupServices(info) {
+  const presets = info.services || [];
+  $("service-field").hidden = presets.length === 0;
+  const none = document.createElement("option");
+  none.value = ""; none.setAttribute("data-i18n", "serviceNone"); none.textContent = t("serviceNone");
+  $("service").append(none);
+  presets.forEach((p) => {
+    const o = document.createElement("option");
+    o.value = p.name; o.textContent = p.name;
+    $("service").append(o);
+  });
+  if (info.services_error) $("service-note").textContent = info.services_error;
+  $("service").addEventListener("change", () => {
+    const p = presets.find((x) => x.name === $("service").value);
+    $("service-note").textContent = p ? p.note : "";
+    if (!p) return;
+    if (p.limit_s !== null) $("limit").value = p.limit_s;
+    if (p.format !== null && [...$("format").options].some((o) => o.value === p.format)) $("format").value = p.format;
+    if (p.overlap_s !== null) $("overlap").value = p.overlap_s;
+  });
+}
+
+$("split-btn").addEventListener("click", () => {
+  const num = (id) => $(id).value;
+  run("split", {
+    limit: num("limit"), format: num("format"), overlap: num("overlap"),
+    before_slack: num("before"), after_slack: num("after"),
+  });
+});
+$("merge-btn").addEventListener("click", () => {
+  run("merge", {
+    match: $("match").value, format: $("out-format").value,
+    method: $("method").value, samplerate: $("samplerate").value,
+    bitrate: $("bitrate").value, seam_search: $("seam-search").checked, seam_fade_ms: $("seam-fade").value,
+    anchor: $("anchor").checked && !$("anchor").disabled, other_match: $("other-match").value,
+    audition: $("audition").value,
+  });
+});
+["split", "merge"].forEach((kind) => $(kind + "-cancel").addEventListener("click", async () => {
+  if (!running) return;
+  $(kind + "-cancel").disabled = true;
+  try { await api("/api/cancel", { method: "POST", params: { id: running.id } }); } catch (e) { /* the job already ended */ }
+  $(kind + "-cancel").disabled = false;
+}));
+["out-format", "seam-search"].forEach((id) => $(id).addEventListener("change", render));
+$("clear-processed").addEventListener("click", async () => {
+  await api("/api/clear", { method: "POST", params: { area: "processed" } });
+  await refresh();
+});
+$("open-folder").addEventListener("click", () => api("/api/open-folder", { method: "POST" }).catch(() => {}));
+$("lang").addEventListener("click", () => {
+  lang = lang === "vi" ? "en" : "vi";
+  try { localStorage.setItem("lang", lang); } catch (e) { /* ignore */ }
+  applyLang();
+});
+$("quit").addEventListener("click", async () => {
+  try { await api("/api/quit", { method: "POST" }); } catch (e) { /* already gone */ }
+  document.body.textContent = t("quitDone");
+});
+
+(async function init() {
+  try {
+    Object.assign(TEXT.en, SeamAudition.TEXT.en);
+    Object.assign(TEXT.vi, SeamAudition.TEXT.vi);
+    info = await api("/api/info");
+    info.methods.forEach((m) => {
+      const o = document.createElement("option");
+      o.value = m; o.textContent = m; o.selected = m === info.default_method;
+      $("method").append(o);
+    });
+    info.bitrates.forEach((b) => {
+      const o = document.createElement("option");
+      o.value = b; o.textContent = b; o.selected = b === "320k";
+      $("bitrate").append(o);
+    });
+    $("seam-fade").value = info.seam_fade_ms;
+    setupServices(info);
+    state = await api("/api/state");
+  } catch (err) {
+    document.body.textContent = t("error", { msg: err.message });
+    return;
+  }
+  applyLang();
+})();
+</script>
+</body>
+</html>

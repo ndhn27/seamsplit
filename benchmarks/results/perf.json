@@ -1,0 +1,105 @@
+{
+ "input_seconds": 300.0,
+ "input_files": {
+  "wav": 52920044,
+  "flac": 29276980,
+  "mp3": 12002786
+ },
+ "repeats": 3,
+ "current": {
+  "decode_wav": {
+   "seconds_median": 0.15318727899999374,
+   "seconds_runs": [
+    0.203,
+    0.153,
+    0.152
+   ],
+   "peak_rss_mb": 203.19921875
+  },
+  "decode_flac": {
+   "seconds_median": 0.48120201000000407,
+   "seconds_runs": [
+    3.004,
+    0.481,
+    0.464
+   ],
+   "peak_rss_mb": 203.33984375
+  },
+  "decode_mp3": {
+   "seconds_median": 0.8559723329999827,
+   "seconds_runs": [
+    0.856,
+    0.839,
+    0.87
+   ],
+   "peak_rss_mb": 206.625
+  },
+  "encode_wav": {
+   "seconds_median": 0.03702672200000734,
+   "seconds_runs": [
+    0.035,
+    0.044,
+    0.037
+   ],
+   "peak_rss_mb": 203.1484375
+  },
+  "encode_flac": {
+   "seconds_median": 0.6032205269999906,
+   "seconds_runs": [
+    0.514,
+    0.629,
+    0.603
+   ],
+   "peak_rss_mb": 203.98828125
+  },
+  "encode_mp3": {
+   "seconds_median": 4.631329718999979,
+   "seconds_runs": [
+    4.653,
+    4.47,
+    4.631
+   ],
+   "peak_rss_mb": 204.09765625
+  },
+  "split_default": {
+   "seconds_median": 6.077181555999999,
+   "seconds_runs": [
+    6.283,
+    6.077,
+    5.991
+   ],
+   "peak_rss_mb": 207.73828125
+  },
+  "split_voice_bar": {
+   "seconds_median": 2.2286396389999936,
+   "seconds_runs": [
+    2.229,
+    2.253,
+    2.148
+   ],
+   "peak_rss_mb": 206.6953125
+  },
+  "merge": {
+   "seconds_median": 1.54133327400001,
+   "seconds_runs": [
+    1.483,
+    1.599,
+    1.541
+   ],
+   "peak_rss_mb": 235.71875
+  }
+ },
+ "executable": {
+  "path": "seamsplit",
+  "sha256": "7fe48865a366be1a11ae0c3fe5cef1597ba718be80a452cc05799c79c7910d94",
+  "size_mb": 61.26514434814453,
+  "start_seconds_median": 1.279156773000011,
+  "start_seconds_first": 7.218422833000005,
+  "start_ok": true,
+  "split_with_empty_path": {
+   "seconds": 1.5627734630000418,
+   "exit_code": 0,
+   "chunks_written": 5
+  }
+ }
+}

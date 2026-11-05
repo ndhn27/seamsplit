@@ -1,0 +1,594 @@
+{
+ "songs": {
+  "so_easy": {
+   "fixed0": {
+    "cuts": [
+     {
+      "at_ms": 8000,
+      "below_song_db": 0.1794476426310858,
+      "percent_of_song_quieter": 52.09380234505863
+     },
+     {
+      "at_ms": 16000,
+      "below_song_db": 3.8896618209473672,
+      "percent_of_song_quieter": 13.735343383584588
+     },
+     {
+      "at_ms": 24000,
+      "below_song_db": 0.41851557772268677,
+      "percent_of_song_quieter": 49.413735343383586
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      0.0442145087478126,
+      16.85728329300944,
+      14.611454362832552
+     ],
+     "instrumental": [
+      50.13745980487461,
+      20.942244146712078,
+      19.544319848556768
+     ]
+    }
+   },
+   "fixed2": {
+    "cuts": [
+     {
+      "at_ms": 8000,
+      "below_song_db": 0.1794476426310858,
+      "percent_of_song_quieter": 52.09380234505863
+     },
+     {
+      "at_ms": 16000,
+      "below_song_db": 3.8896618209473672,
+      "percent_of_song_quieter": 13.735343383584588
+     },
+     {
+      "at_ms": 24000,
+      "below_song_db": 0.41851557772268677,
+      "percent_of_song_quieter": 49.413735343383586
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      2.921514992604395,
+      17.612370096577273,
+      23.744613577422605
+     ],
+     "instrumental": [
+      52.89415386749232,
+      21.69829599345798,
+      28.676618724714853
+     ]
+    }
+   },
+   "quiet2": {
+    "cuts": [
+     {
+      "at_ms": 8440,
+      "below_song_db": 8.028668204212295,
+      "percent_of_song_quieter": 1.1725293132328307
+     },
+     {
+      "at_ms": 16410,
+      "below_song_db": 6.010221608105894,
+      "percent_of_song_quieter": 4.522613065326634
+     },
+     {
+      "at_ms": 23460,
+      "below_song_db": 4.271805696081994,
+      "percent_of_song_quieter": 11.557788944723619
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      3.1799817500359424,
+      17.40146393899182,
+      22.235598665924144
+     ],
+     "instrumental": [
+      52.798999495409156,
+      21.433577729140794,
+      27.72179100256335
+     ]
+    }
+   },
+   "voice2": {
+    "cuts": [
+     {
+      "at_ms": 7420,
+      "below_song_db": -0.20109535790046706,
+      "percent_of_song_quieter": 56.11390284757118
+     },
+     {
+      "at_ms": 16360,
+      "below_song_db": 5.4863404659332815,
+      "percent_of_song_quieter": 5.360134003350084
+     },
+     {
+      "at_ms": 23300,
+      "below_song_db": -0.707431152495392,
+      "percent_of_song_quieter": 63.98659966499163
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      14.377223123567848,
+      17.268798877598357,
+      19.883179050411705
+     ],
+     "instrumental": [
+      31.004169215889515,
+      21.49357625201386,
+      25.91185891177269
+     ]
+    }
+   }
+  },
+  "mallory": {
+   "fixed0": {
+    "cuts": [
+     {
+      "at_ms": 8000,
+      "below_song_db": 1.9200956111725986,
+      "percent_of_song_quieter": 44.89112227805695
+     },
+     {
+      "at_ms": 16000,
+      "below_song_db": -4.962662613862252,
+      "percent_of_song_quieter": 95.30988274706867
+     },
+     {
+      "at_ms": 24000,
+      "below_song_db": -1.11102872525667,
+      "percent_of_song_quieter": 74.37185929648241
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      21.961389961238158,
+      17.90802297549966,
+      21.529299101012683
+     ],
+     "instrumental": [
+      28.559911877320523,
+      26.386668378566224,
+      27.390897132905906
+     ]
+    }
+   },
+   "fixed2": {
+    "cuts": [
+     {
+      "at_ms": 8000,
+      "below_song_db": 1.9200956111725986,
+      "percent_of_song_quieter": 44.89112227805695
+     },
+     {
+      "at_ms": 16000,
+      "below_song_db": -4.962662613862252,
+      "percent_of_song_quieter": 95.30988274706867
+     },
+     {
+      "at_ms": 24000,
+      "below_song_db": -1.11102872525667,
+      "percent_of_song_quieter": 74.37185929648241
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      23.00743728393224,
+      19.460061970027585,
+      24.424028999397848
+     ],
+     "instrumental": [
+      29.610305343359062,
+      27.938368292506116,
+      30.286287074984347
+     ]
+    }
+   },
+   "quiet2": {
+    "cuts": [
+     {
+      "at_ms": 9000,
+      "below_song_db": 7.523283619514913,
+      "percent_of_song_quieter": 10.217755443886096
+     },
+     {
+      "at_ms": 14100,
+      "below_song_db": 10.725749757892778,
+      "percent_of_song_quieter": 4.690117252931323
+     },
+     {
+      "at_ms": 22060,
+      "below_song_db": 12.28397504351943,
+      "percent_of_song_quieter": 3.350083752093802
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      18.125782377285226,
+      18.434191197546426,
+      22.27710994773757
+     ],
+     "instrumental": [
+      26.28680770148954,
+      27.477388659591305,
+      31.054600303432352
+     ]
+    }
+   },
+   "voice2": {
+    "cuts": [
+     {
+      "at_ms": 8120,
+      "below_song_db": 4.993259625602196,
+      "percent_of_song_quieter": 23.618090452261306
+     },
+     {
+      "at_ms": 16930,
+      "below_song_db": 2.053305793216037,
+      "percent_of_song_quieter": 43.383584589614735
+     },
+     {
+      "at_ms": 24900,
+      "below_song_db": 5.091550770024035,
+      "percent_of_song_quieter": 23.283082077051926
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      21.77288581373872,
+      17.303382610419206,
+      21.814491100996204
+     ],
+     "instrumental": [
+      29.23508179318924,
+      26.02854098132064,
+      27.238140628979718
+     ]
+    }
+   }
+  },
+  "widow": {
+   "fixed0": {
+    "cuts": [
+     {
+      "at_ms": 8000,
+      "below_song_db": 1.0283258863358746,
+      "percent_of_song_quieter": 30.485762144053602
+     },
+     {
+      "at_ms": 16000,
+      "below_song_db": -1.6044318058915543,
+      "percent_of_song_quieter": 82.57956448911223
+     },
+     {
+      "at_ms": 24000,
+      "below_song_db": -0.9296016917207908,
+      "percent_of_song_quieter": 67.33668341708542
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      20.043292062312467,
+      25.68247465046982,
+      18.26315845320658
+     ],
+     "instrumental": [
+      26.382520951687386,
+      28.444879018292323,
+      20.621397910118866
+     ]
+    }
+   },
+   "fixed2": {
+    "cuts": [
+     {
+      "at_ms": 8000,
+      "below_song_db": 1.0283258863358746,
+      "percent_of_song_quieter": 30.485762144053602
+     },
+     {
+      "at_ms": 16000,
+      "below_song_db": -1.6044318058915543,
+      "percent_of_song_quieter": 82.57956448911223
+     },
+     {
+      "at_ms": 24000,
+      "below_song_db": -0.9296016917207908,
+      "percent_of_song_quieter": 67.33668341708542
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      25.29358872130952,
+      27.00748046581836,
+      19.449316154111994
+     ],
+     "instrumental": [
+      31.63231274170331,
+      29.769577315113228,
+      21.8078828687718
+     ]
+    }
+   },
+   "quiet2": {
+    "cuts": [
+     {
+      "at_ms": 8990,
+      "below_song_db": 4.230216890794747,
+      "percent_of_song_quieter": 15.07537688442211
+     },
+     {
+      "at_ms": 15000,
+      "below_song_db": 2.2666458454351357,
+      "percent_of_song_quieter": 19.765494137353436
+     },
+     {
+      "at_ms": 20400,
+      "below_song_db": 0.05972654555933232,
+      "percent_of_song_quieter": 44.55611390284757
+     },
+     {
+      "at_ms": 25490,
+      "below_song_db": 17.099443877404735,
+      "percent_of_song_quieter": 0.33500837520938026
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      26.648833753354232,
+      23.50917315128534,
+      25.168238166119636,
+      22.05149426332302
+     ],
+     "instrumental": [
+      33.27468181730377,
+      28.12986414199784,
+      29.127993001338588,
+      28.759008082166012
+     ]
+    }
+   },
+   "voice2": {
+    "cuts": [
+     {
+      "at_ms": 7730,
+      "below_song_db": -0.7513325210264767,
+      "percent_of_song_quieter": 63.14907872696818
+     },
+     {
+      "at_ms": 14920,
+      "below_song_db": 0.9392061778734977,
+      "percent_of_song_quieter": 31.490787269681743
+     },
+     {
+      "at_ms": 20010,
+      "below_song_db": -1.9495027902629012,
+      "percent_of_song_quieter": 90.11725293132329
+     },
+     {
+      "at_ms": 25600,
+      "below_song_db": 4.295816864211947,
+      "percent_of_song_quieter": 14.40536013400335
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      25.82114581414585,
+      23.349787738370118,
+      25.4886511964784,
+      20.004564207589794
+     ],
+     "instrumental": [
+      31.208818732383786,
+      28.397987454487144,
+      30.008941198292348,
+      28.162511158136102
+     ]
+    }
+   }
+  },
+  "slow_motion_dream": {
+   "fixed0": {
+    "cuts": [
+     {
+      "at_ms": 4180,
+      "below_song_db": 4.361930340854286,
+      "percent_of_song_quieter": 8.411214953271028
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      21.744058748294055
+     ],
+     "instrumental": [
+      22.037199226278872
+     ]
+    }
+   },
+   "fixed2": {
+    "cuts": [
+     {
+      "at_ms": 4180,
+      "below_song_db": 4.361930340854286,
+      "percent_of_song_quieter": 8.411214953271028
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      28.17647315522028
+     ],
+     "instrumental": [
+      24.346100925278023
+     ]
+    }
+   },
+   "quiet2": {
+    "cuts": [
+     {
+      "at_ms": 6370,
+      "below_song_db": 4.839703943558149,
+      "percent_of_song_quieter": 7.009345794392523
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      31.209808950719204
+     ],
+     "instrumental": [
+      24.477992978050445
+     ]
+    }
+   },
+   "voice2": {
+    "cuts": [
+     {
+      "at_ms": 6150,
+      "below_song_db": 1.549535027750375,
+      "percent_of_song_quieter": 27.102803738317753
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      28.909400166679603
+     ],
+     "instrumental": [
+      24.8306505798779
+     ]
+    }
+   }
+  },
+  "demucs_test": {
+   "fixed0": {
+    "cuts": [
+     {
+      "at_ms": 8000,
+      "below_song_db": 2.4204013990434383,
+      "percent_of_song_quieter": 3.022670025188917
+     },
+     {
+      "at_ms": 16000,
+      "below_song_db": -0.9471013093916376,
+      "percent_of_song_quieter": 75.56675062972292
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      1.1591746229821092,
+      -1.3356481314128874
+     ],
+     "instrumental": [
+      34.26244380276812,
+      55.001979662338755
+     ]
+    }
+   },
+   "fixed2": {
+    "cuts": [
+     {
+      "at_ms": 8000,
+      "below_song_db": 2.4204013990434383,
+      "percent_of_song_quieter": 3.022670025188917
+     },
+     {
+      "at_ms": 16000,
+      "below_song_db": -0.9471013093916376,
+      "percent_of_song_quieter": 75.56675062972292
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      13.682123873718124,
+      -1.4836434764607858
+     ],
+     "instrumental": [
+      46.74968111993123,
+      54.8778554760101
+     ]
+    }
+   },
+   "quiet2": {
+    "cuts": [
+     {
+      "at_ms": 6780,
+      "below_song_db": 3.18493188880829,
+      "percent_of_song_quieter": 0.7556675062972292
+     },
+     {
+      "at_ms": 12880,
+      "below_song_db": 0.8452125891834577,
+      "percent_of_song_quieter": 36.775818639798494
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      5.844382654949468,
+      -2.4850163303447106
+     ],
+     "instrumental": [
+      39.542914565244324,
+      55.23533857537324
+     ]
+    }
+   },
+   "voice2": {
+    "cuts": [
+     {
+      "at_ms": 8650,
+      "below_song_db": 1.8485196787541334,
+      "percent_of_song_quieter": 11.335012594458437
+     },
+     {
+      "at_ms": 15690,
+      "below_song_db": 0.6195881558828056,
+      "percent_of_song_quieter": 42.56926952141058
+     }
+    ],
+    "hardcut_seam_db": {
+     "vocals": [
+      20.841089547196727,
+      -1.7130775901260606
+     ],
+     "instrumental": [
+      53.78084013293937,
+      55.1529576272248
+     ]
+    }
+   }
+  }
+ },
+ "summary": {
+  "fixed0": {
+   "cuts": 12,
+   "level_below_song_db_mean": 0.3886293443820361,
+   "percent_of_song_quieter_mean": 49.76819925433907,
+   "hardcut_seam_db_mean": 22.424170682025537,
+   "hardcut_seam_db_median": 21.636678924653367
+  },
+  "fixed2": {
+   "cuts": 12,
+   "level_below_song_db_mean": 0.3886293443820361,
+   "percent_of_song_quieter_mean": 49.76819925433907,
+   "hardcut_seam_db_mean": 25.98261689820841,
+   "hardcut_seam_db_median": 24.858808860353683
+  },
+  "quiet2": {
+   "cuts": 13,
+   "level_below_song_db_mean": 6.259198885390088,
+   "percent_of_song_quieter_mean": 12.291054847116543,
+   "hardcut_seam_db_mean": 25.34315386692416,
+   "hardcut_seam_db_median": 25.727522933804586
+  },
+  "voice2": {
+   "cuts": 13,
+   "level_below_song_db_mean": 1.7898277490433132,
+   "percent_of_song_quieter_mean": 38.1473045039234,
+   "hardcut_seam_db_mean": 25.675984473983597,
+   "hardcut_seam_db_median": 25.654898505312126
+  }
+ }
+}

@@ -34,13 +34,15 @@ def write_song(path: str) -> None:
         w.writeframes(bytes(frames))
 
 
-def run(exe: str, *args: str) -> str:
+def run(exe: str, *args: str, cwd: str) -> str:
     env = {
         "PATH": "",
         "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""),
         "HOME": tempfile.gettempdir(),
     }
-    done = subprocess.run([exe, *args], env=env, capture_output=True, text=True, timeout=300)
+    done = subprocess.run(
+        [exe, *args], cwd=cwd, env=env, capture_output=True, text=True, timeout=300
+    )
     if done.returncode != 0:
         sys.exit(f"FAILED: {' '.join(args)}\n{done.stdout}\n{done.stderr}")
     return done.stdout
@@ -54,11 +56,15 @@ def wav_seconds(path: str) -> float:
 def main() -> None:
     exe = os.path.abspath(sys.argv[1])
     with tempfile.TemporaryDirectory() as work:
-        os.chdir(work)
-        write_song("song.wav")
-        print(run(exe, "--version").strip())
-        run(
-            exe,
+        # The program is run from the folder, this process does not move into it: Windows
+        # cannot delete a folder that is any process's current folder, so leaving the
+        # ``with`` block would fail there.
+        def go(*args: str) -> str:
+            return run(exe, *args, cwd=work)
+
+        write_song(os.path.join(work, "song.wav"))
+        print(go("--version").strip())
+        go(
             "split",
             "song.wav",
             "--target",
@@ -72,8 +78,7 @@ def main() -> None:
             "--out",
             "flac_chunks",
         )
-        run(
-            exe,
+        go(
             "split",
             "song.wav",
             "--limit",
@@ -87,11 +92,10 @@ def main() -> None:
             "--out",
             "mp3_chunks",
         )
-        flacs = [n for n in os.listdir("flac_chunks") if n.endswith(".flac")]
-        mp3s = [n for n in os.listdir("mp3_chunks") if n.endswith(".mp3")]
+        flacs = [n for n in os.listdir(os.path.join(work, "flac_chunks")) if n.endswith(".flac")]
+        mp3s = [n for n in os.listdir(os.path.join(work, "mp3_chunks")) if n.endswith(".mp3")]
         assert len(flacs) >= 2 and len(mp3s) >= 2, (flacs, mp3s)
-        run(
-            exe,
+        go(
             "merge",
             "flac_chunks",
             "--manifest",
@@ -99,7 +103,7 @@ def main() -> None:
             "--out",
             "merged.wav",
         )
-        length = wav_seconds("merged.wav")
+        length = wav_seconds(os.path.join(work, "merged.wav"))
         assert abs(length - SECONDS) < 0.01, f"merged is {length}s, the song is {SECONDS}s"
         print(
             f"ok: {len(flacs)} flac and {len(mp3s)} mp3 chunks, "

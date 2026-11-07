@@ -26,3 +26,6 @@ someone who uses or develops it. The format follows [Keep a Changelog](https://k
 - A regression test fails if the `Wave_write.__del__` warning comes back.
 - The tests no longer leave files open (11 `ResourceWarning`s removed), so a run with
   `-W default` is clean.
+- The release smoke test (`packaging/smoke_test.py`) no longer changes its own working
+  directory into its temporary folder. Windows cannot delete a folder that is some process's
+  current directory, so the cleanup failed there and the Windows release build with it.

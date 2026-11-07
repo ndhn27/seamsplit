@@ -4,8 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SeamSplit</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f6fed'/%3E%3Cpath d='M6 16h4l2.5-7 4 14 2.5-7h7' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
 :root {
+  color-scheme: light dark;
   --bg: #f5f6f8; --card: #fff; --text: #1d2230; --muted: #5d6578; --line: #d9dde6;
   --accent: #2f6fed; --accent-text: #fff; --ok: #1a7f4b; --warn: #a15c00; --err: #b3261e;
   --drop: #eef3ff;
@@ -27,7 +29,9 @@ h2 { margin: 0 0 4px; font-size: 18px; }
 p { margin: 6px 0; }
 .muted { color: var(--muted); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-top: 16px; }
-.drop { display: block; border: 2px dashed var(--line); border-radius: 10px; padding: 26px 12px; text-align: center; cursor: pointer; margin: 12px 0; }
+.drop { position: relative; display: block; border: 2px dashed var(--line); border-radius: 10px; padding: 26px 12px; text-align: center; cursor: pointer; margin: 12px 0; }
+.drop input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); outline: none; }
+.drop:has(input:focus-visible) { border-color: var(--accent); background: var(--drop); }
 .drop.over { border-color: var(--accent); background: var(--drop); }
 .drop strong { display: block; word-break: break-all; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 12px 0; }
@@ -48,12 +52,14 @@ button.primary { background: var(--accent); color: var(--accent-text); border-co
 button:disabled { opacity: .5; cursor: default; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
 progress { width: 100%; height: 10px; margin-top: 12px; }
-.status { margin-top: 8px; min-height: 1.4em; }
+.status { margin-top: 8px; }
+.status:empty { display: none; }
 .error { color: var(--err); } .good { color: var(--ok); } .warn { color: var(--warn); }
 table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
 th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 ul.files { margin: 8px 0; padding-left: 20px; color: var(--muted); font-size: 13px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -71,7 +77,7 @@ ul.files { margin: 8px 0; padding-left: 20px; color: var(--muted); font-size: 13
   <section class="card" id="split-card">
     <h2 data-i18n="splitTitle"></h2>
     <label class="drop" id="drop-split">
-      <input type="file" id="file-split" accept="audio/*,.mp3,.wav,.flac,.m4a,.ogg,.aac,.aiff" hidden>
+      <input type="file" id="file-split" accept="audio/*,.mp3,.wav,.flac,.m4a,.ogg,.aac,.aiff">
       <span id="drop-split-text" data-i18n="dropSplit"></span>
     </label>
     <div class="grid">
@@ -119,7 +125,7 @@ ul.files { margin: 8px 0; padding-left: 20px; color: var(--muted); font-size: 13
     <h2 data-i18n="mergeTitle"></h2>
     <p class="muted" data-i18n="mergeIntro"></p>
     <label class="drop" id="drop-merge">
-      <input type="file" id="file-merge" multiple hidden>
+      <input type="file" id="file-merge" multiple>
       <span data-i18n="dropMerge"></span>
     </label>
     <div id="processed-info" hidden>
@@ -241,34 +247,34 @@ const TEXT = {
     downloadKit: "Download the listening kit (.zip)",
   },
   vi: {
-    tagline: "Chia bài dài thành các đoạn chồng lấp cho AI tách stem, rồi ghép kết quả lại bằng crossfade. Mọi thứ chạy ngay trên máy này.",
+    tagline: "Chia bài dài thành các chunk chồng lấp cho AI tách stem, rồi ghép kết quả lại bằng crossfade. Mọi thứ chạy ngay trên máy này.",
     quit: "Thoát", quitDone: "SeamSplit đã dừng. Bạn có thể đóng tab này.",
     splitTitle: "1. Chia", dropSplit: "Kéo thả bài hát vào đây, hoặc bấm để chọn",
     service: "Preset dịch vụ", serviceNone: "— không (tự đặt) —",
-    limit: "Giới hạn mỗi file của dịch vụ (giây)", limitHint: "Các đoạn được cắt để không đoạn nào dài hơn mức này.",
-    format: "Định dạng đoạn", formatHint: "FLAC và WAV tránh được việc MP3 mất chất lượng và bị trễ do encoder, nếu dịch vụ của bạn nhận.",
+    limit: "Giới hạn mỗi file của dịch vụ (giây)", limitHint: "Các chunk được cắt để không chunk nào dài hơn mức này.",
+    format: "Định dạng chunk", formatHint: "FLAC và WAV tránh được việc MP3 mất chất lượng và bị trễ do encoder, nếu dịch vụ của bạn nhận.",
     fmtMp3: "MP3 (nhỏ nhất)", fmtFlac: "FLAC (không mất dữ liệu, nhỏ bằng nửa WAV)", fmtWav: "WAV (không mất dữ liệu)",
-    advanced: "Nâng cao", overlap: "Phần chồng lấp (giây)", beforeSlack: "Before-slack (giây)", afterSlack: "After-slack (giây)",
+    advanced: "Nâng cao", overlap: "Phần chồng lấp (giây)", beforeSlack: "Rút ngắn tối đa (giây)", afterSlack: "Kéo dài tối đa (giây)",
     splitBtn: "Chia", reading: "Đang đọc và phân tích…", exporting: "Đang xuất {i}/{n}: {name}",
-    splitDone: "Xong: {n} đoạn.", colName: "Đoạn", colStart: "Bắt đầu", colEnd: "Kết thúc", colLen: "Độ dài",
+    splitDone: "Xong: {n} chunk.", colName: "Chunk", colStart: "Bắt đầu", colEnd: "Kết thúc", colLen: "Độ dài",
     downloadZip: "Tải tất cả (.zip)", openFolder: "Mở thư mục làm việc",
     mergeTitle: "2. Ghép",
-    mergeIntro: "Gửi các đoạn cho dịch vụ AI, tải kết quả về, rồi kéo thả các file đó vào đây.",
-    dropMerge: "Kéo thả các đoạn đã xử lý vào đây (cùng manifest.json nếu bạn không chia trong phiên này)",
+    mergeIntro: "Gửi các chunk cho dịch vụ AI, tải kết quả về, rồi kéo thả các file đó vào đây.",
+    dropMerge: "Kéo thả các chunk đã xử lý vào đây (cùng manifest.json nếu bạn không chia trong phiên này)",
     files: "{n} file đã xử lý", clear: "Xóa", more: "… và {n} file nữa",
     manifestSplit: "Đang dùng manifest từ bước chia ở trên.", manifestUploaded: "Đang dùng manifest.json bạn vừa thả.",
     manifestNone: "Chưa có manifest: hãy chia một bài ở trên, hoặc thả manifest.json của nó vào đây.",
-    match: "Chỉ dùng file có tên chứa (tùy chọn)", matchHint: "Dịch vụ thường trả nhiều file cho mỗi đoạn (vocals, instrumental…). Gõ một từ có trong tên file bạn muốn.",
+    match: "Chỉ dùng file có tên chứa (tùy chọn)", matchHint: "Dịch vụ thường trả nhiều file cho mỗi chunk (vocals, instrumental…). Gõ một từ có trong tên file bạn muốn.",
     outFormat: "Định dạng đầu ra", method: "Đường cong crossfade", samplerate: "Tần số lấy mẫu (Hz)",
     mergeBtn: "Ghép", merging: "Đang ghép…", mergeDone: "Đã ghép ({len}).", download: "Tải {file}",
-    seams: "{n} mối nối; các đoạn khớp nhau ít nhất {db} dB.", seamsNone: "{n} mối nối.",
+    seams: "{n} mối nối; các chunk khớp nhau ít nhất {db} dB.", seamsNone: "{n} mối nối.",
     flagged: "{n} mối nối nên nghe lại, tại: {times}", workdir: "Thư mục làm việc: {path}", error: "Lỗi: {msg}",
     needFile: "Hãy thả một bài hát trước.",
     cancel: "Hủy", cancelling: "Đang hủy… bước đang chạy cần xong trước.", cancelled: "Đã hủy.",
-    readingPart: "Đang đọc đoạn {i}/{n}: {name}",
+    readingPart: "Đang đọc chunk {i}/{n}: {name}",
     bitrate: "Bitrate MP3", bitrateHint: "Chỉ dùng khi đầu ra là MP3.",
     seamSearch: "Tìm mối nối tốt nhất trong phần chồng lấp (thử nghiệm)",
-    seamSearchHint: "Thay vì làm mờ chéo trên toàn bộ phần chồng lấp, chỉ làm mờ trên một đoạn ngắn nơi hai đoạn khớp nhau nhất.",
+    seamSearchHint: "Thay vì làm mờ chéo trên toàn bộ phần chồng lấp, chỉ làm mờ trên một đoạn ngắn nơi hai chunk khớp nhau nhất.",
     seamFade: "Độ dài đoạn làm mờ ở mối nối (ms)",
     reportMd: "Báo cáo mối nối (.md)", reportJson: "Báo cáo mối nối (.json)",
     otherMatch: "Stem còn lại (tùy chọn)", otherMatchHint: "Nếu dịch vụ cũng trả stem còn lại (ví dụ vocals), gõ một từ trong tên của nó: hai stem được ghép cùng nhau với cùng độ lệch, gain và crossfade, và bạn nhận hai file.",
@@ -311,6 +317,7 @@ function applyLang() {
     $("workdir").textContent = t("workdir", { path: info.workdir });
     $("version").textContent = "v" + info.version;
   }
+  statuses.forEach((s, el) => paintStatus(el));
   render();
 }
 
@@ -327,7 +334,18 @@ async function api(path, opts) {
   return data;
 }
 
-function showError(el, err) { el.className = "status error"; el.textContent = t("error", { msg: err.message || err }); }
+const statuses = new Map();
+function paintStatus(el) {
+  const s = statuses.get(el);
+  el.className = s.cls ? "status " + s.cls : "status";
+  el.textContent = [t(s.key, s.vars), ...s.extra].join(" ");
+}
+function setStatus(el, key, vars, cls, extra) {
+  statuses.set(el, { key, vars: vars || {}, cls: cls || "", extra: extra || [] });
+  paintStatus(el);
+}
+function clearStatus(el) { statuses.delete(el); el.className = "status"; el.textContent = ""; }
+function showError(el, err) { setStatus(el, "error", { msg: err.message || err }, "error"); }
 function fmtTime(s) { const m = Math.floor(s / 60); return m + ":" + (s - m * 60).toFixed(1).padStart(4, "0"); }
 function fmtLen(ms) { return fmtTime(ms / 1000); }
 
@@ -469,15 +487,14 @@ async function watch(jobId, kind) {
   const bar = $(kind + "-progress"), status = $(kind + "-status");
   bar.hidden = false;
   bar.removeAttribute("value");
-  status.className = "status";
-  status.textContent = t(kind === "split" ? "reading" : "merging");
+  setStatus(status, kind === "split" ? "reading" : "merging");
   for (;;) {
     const job = await api("/api/job", { params: { id: jobId } });
     if (job.progress) {
       bar.max = job.progress.n; bar.value = job.progress.i;
-      status.textContent = t(kind === "split" ? "exporting" : job.progress.phase === "audition" ? "auditioning" : "readingPart", job.progress);
+      setStatus(status, kind === "split" ? "exporting" : job.progress.phase === "audition" ? "auditioning" : "readingPart", job.progress);
     }
-    if (job.cancelling) status.textContent = t("cancelling");
+    if (job.cancelling) setStatus(status, "cancelling");
     if (job.state === "running") { await new Promise((r) => setTimeout(r, 400)); continue; }
     bar.hidden = true;
     if (job.state === "error") throw new Error(job.error);
@@ -497,18 +514,17 @@ async function run(kind, payload) {
     running = { id: job, kind };
     render();
     const result = await watch(job, kind);
-    status.textContent = "";
+    clearStatus(status);
     if (result === null) {
-      status.textContent = t("cancelled");
+      setStatus(status, "cancelled");
       return;
     }
     if (kind === "merge") mergeResult = result;
     if (kind === "split") {
       mergeResult = null;
       await refresh();
-      status.className = "status good";
-      status.textContent = t("splitDone", { n: state.split ? state.split.parts.length : 0 });
-      (result.warnings || []).forEach((w) => { status.textContent += " " + w; status.className = "status warn"; });
+      const warnings = result.warnings || [];
+      setStatus(status, "splitDone", { n: state.split ? state.split.parts.length : 0 }, warnings.length ? "warn" : "good", warnings);
     }
   } catch (err) {
     $(kind + "-progress").hidden = true;
@@ -525,7 +541,7 @@ dropzone($("drop-split"), $("file-split"), async (files) => {
   const status = $("split-status");
   try {
     await api("/api/upload", { method: "POST", params: { area: "input", name: files[0].name }, body: files[0] });
-    status.textContent = "";
+    clearStatus(status);
     await refresh();
   } catch (err) { showError(status, err); }
 });
@@ -537,7 +553,7 @@ dropzone($("drop-merge"), $("file-merge"), async (files) => {
       const area = file.name.toLowerCase().endsWith(".json") ? "manifest" : "processed";
       await api("/api/upload", { method: "POST", params: { area, name: file.name }, body: file });
     }
-    status.textContent = "";
+    clearStatus(status);
     await refresh();
   } catch (err) { showError(status, err); await refresh().catch(() => {}); }
 });

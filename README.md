@@ -1,8 +1,8 @@
+<div align="center">
+
 # SeamSplit
 
-<p align="center">
-  <b>Split a long song into overlapping chunks for AI stem separators, then merge the results back with a real crossfade instead of a naive concatenation.</b>
-</p>
+**Split a long song into overlapping chunks for AI stem separators, then merge the results back with a real crossfade instead of a naive concatenation.**
 
 [![CI](https://github.com/ndhn27/seamsplit/actions/workflows/ci.yml/badge.svg)](https://github.com/ndhn27/seamsplit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -12,6 +12,8 @@
 Drag-and-drop page · Command line · Runs on your computer · No FFmpeg to install
 
 ![SeamSplit's drag-and-drop page after splitting a 48 s demo track into five overlapping chunks](docs/images/gui.png)
+
+</div>
 
 ## ⚡ Quick start
 

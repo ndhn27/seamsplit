@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "seamsplit"
-version = "1.1.0"
+version = "1.1.0a"
 description = "Split audio into overlapping chunks for AI stem separation, then merge them back with a crossfade."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -15,6 +15,8 @@ authors = [
 ]
 keywords = ["audio", "crossfade", "stem-separation", "vocal-remover", "pyav", "ffmpeg"]
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -49,6 +51,9 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/ndhn27/seamsplit"
+Documentation = "https://github.com/ndhn27/seamsplit/tree/main/docs"
+Changelog = "https://github.com/ndhn27/seamsplit/blob/main/CHANGELOG.md"
+Source = "https://github.com/ndhn27/seamsplit"
 Issues = "https://github.com/ndhn27/seamsplit/issues"
 
 [project.scripts]

@@ -3,7 +3,8 @@ name: Release programs
 # One self-contained program per system (Python, numpy, PyAV with its FFmpeg inside),
 # built with PyInstaller from packaging/seamsplit.spec. A tag like v1.0.0 (it must be the
 # package version) builds them and attaches them to a release, with a BUILD_INFO file per system
-# and the notices of what is inside; "Run workflow" builds them as downloadable artifacts only.
+# and the notices of what is inside; the description of the release is that version's section of
+# CHANGELOG.md. "Run workflow" builds them as downloadable artifacts only.
 on:
   push:
     tags: ["v*"]
@@ -51,7 +52,12 @@ jobs:
           mkdir out
           cp dist/${{ matrix.exe }} out/seamsplit-${{ matrix.name }}${{ endsWith(matrix.exe, '.exe') && '.exe' || '' }}
           python -X utf8 packaging/build_info.py > out/BUILD_INFO-${{ matrix.name }}.txt
-          cd out && (sha256sum * 2>/dev/null || shasum -a 256 *) > SHA256SUMS-${{ matrix.name }}.txt
+          cd out
+          # list the files by name: a bare * would also match SHA256SUMS-*.txt, which the
+          # redirection has already created, so the file would carry a sum of itself
+          files=(seamsplit-* BUILD_INFO-*)
+          (sha256sum "${files[@]}" 2>/dev/null || shasum -a 256 "${files[@]}") > SHA256SUMS-${{ matrix.name }}.txt
+          (sha256sum -c SHA256SUMS-${{ matrix.name }}.txt 2>/dev/null || shasum -a 256 -c SHA256SUMS-${{ matrix.name }}.txt)
 
       - uses: actions/upload-artifact@v4
         with:
@@ -75,6 +81,16 @@ jobs:
       - name: Licence and notices go with the programs
         run: cp LICENSE THIRD_PARTY_NOTICES.md out/
 
+      - name: Release notes from CHANGELOG.md
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          awk -v v="[$ver]" '/^## \[/{f=($2==v); next} /^\[.*\]: /{f=0} f' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "CHANGELOG.md has no section for $ver" >&2
+            exit 1
+          fi
+
       - uses: softprops/action-gh-release@v2
         with:
           files: out/*
+          body_path: notes.md

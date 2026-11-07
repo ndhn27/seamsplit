@@ -59,14 +59,17 @@ run them; their code is linted and tested like the rest. Read
 
 ## Making a release
 
-1. Set the same version in `pyproject.toml` and `src/seamsplit/__init__.py`.
+1. Set the same version in `pyproject.toml` and `src/seamsplit/__init__.py`, and move the
+   entries under *Unreleased* in `CHANGELOG.md` to a new `## [X.Y.Z] - date` section and
+   update the comparison links at the bottom of that file.
 2. On GitHub, run *Actions, Release programs, Run workflow*. It builds and smoke-tests the
    program on Linux, Windows and macOS (Apple silicon and Intel) and publishes nothing. Download
    the artifacts and read the `BUILD_INFO` files: PyAV and FFmpeg versions, licence line,
    options and libraries.
 3. Push a tag `vX.Y.Z`, for example `v1.0.0`. The workflow stops if the tag is not the package
-   version; otherwise it attaches the programs, their SHA-256 sums, the `BUILD_INFO` files,
-   `LICENSE` and `THIRD_PARTY_NOTICES.md` to the release.
+   version, or if `CHANGELOG.md` has no section for it; otherwise it attaches the programs,
+   their SHA-256 sums, the `BUILD_INFO` files, `LICENSE` and `THIRD_PARTY_NOTICES.md` to the
+   release, and uses that section of the changelog as its description.
 4. After PyAV is updated, check that `THIRD_PARTY_NOTICES.md` still matches the libraries
    in `BUILD_INFO`.
 

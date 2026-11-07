@@ -19,7 +19,10 @@ pip install pre-commit && pre-commit install
 Audio is read and written by [PyAV](https://pyav.org/), whose wheels carry FFmpeg, so there
 is nothing else to install. The tests build their own audio and use stand-ins for the
 separation services and programs (`tests/fake_service.py`, `tests/fake_programs.py`), so they
-need neither a model nor an account.
+need neither a model nor an account. The one exception is the test of the listening page
+in `tests/test_audition.py`, which runs the page in a browser: run
+`python -m playwright install chromium` once to let it run. Without it the test is skipped on
+your machine; CI installs the browser and fails if it is missing.
 
 ## Before you open a pull request
 

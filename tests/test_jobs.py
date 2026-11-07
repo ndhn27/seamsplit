@@ -53,7 +53,8 @@ def _run(folder, song, **options):
 
 def _hand_back(folder, stems=("instrumental", "vocals")):
     chunks = os.path.join(folder, "chunks")
-    parts = json.load(open(os.path.join(chunks, "manifest.json")))["parts"]
+    with open(os.path.join(chunks, "manifest.json"), encoding="utf-8") as f:
+        parts = json.load(f)["parts"]
     n = len(parts)
     hand_back(
         chunks,

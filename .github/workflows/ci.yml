@@ -29,6 +29,11 @@ jobs:
       - name: Install package
         run: pip install -e ".[dev]"
 
+      # the listening page is tested in a real browser (tests/test_audition.py); without one
+      # that test cannot run, and it is the one that shows the page works for a person
+      - name: Install the browser for the listening-page test
+        run: python -m playwright install --with-deps chromium
+
       # style and types do not depend on the system: not repeated on Windows and macOS
       - name: Lint
         if: runner.os == 'Linux'

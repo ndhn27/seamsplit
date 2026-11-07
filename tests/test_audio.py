@@ -444,6 +444,9 @@ def test_an_unknown_format_is_refused_with_the_ones_that_work(tmp_path):
         _tone(0.1).export(tmp_path / "a.xyz", format="xyz")
 
 
+# wave.open() fails inside Wave_write.__init__ when the file cannot be opened, and the
+# half-built object then raises from __del__; that must not happen on our side
+@pytest.mark.filterwarnings("error::pytest.PytestUnraisableExceptionWarning")
 def test_a_wav_that_cannot_be_written_is_a_couldnt_encode_error(tmp_path):
     with pytest.raises(CouldntEncodeError):
         _tone(0.1).export(tmp_path / "no-such-folder" / "a.wav", format="wav")

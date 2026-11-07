@@ -221,15 +221,24 @@ def write_wav(
         pcm = (np.frombuffer(data, dtype=np.int8).astype(np.int16) + 128).astype(np.uint8)
         data = pcm.tobytes()
     try:
-        target = os.fspath(out_f) if isinstance(out_f, os.PathLike) else out_f
-        with wave.open(target, "wb") as w:
-            w.setnchannels(channels)
-            w.setsampwidth(sample_width)
-            w.setframerate(frame_rate)
-            w.setnframes(len(data) // (sample_width * channels))
-            w.writeframesraw(data)
+        if isinstance(out_f, (str, os.PathLike)):
+            # opened here, not by wave.open(path): when the open fails inside wave, the
+            # half-built Wave_write raises again from __del__ (an "unraisable" warning)
+            with open(out_f, "wb") as f:
+                _write_wav_to(f, data, sample_width, frame_rate, channels)
+        else:
+            _write_wav_to(out_f, data, sample_width, frame_rate, channels)
     except (OSError, wave.Error) as exc:
         raise CouldntEncodeError(f"Encoding failed: {exc}") from exc
+
+
+def _write_wav_to(f: Any, data: bytes, sample_width: int, frame_rate: int, channels: int) -> None:
+    with wave.open(f, "wb") as w:
+        w.setnchannels(channels)
+        w.setsampwidth(sample_width)
+        w.setframerate(frame_rate)
+        w.setnframes(len(data) // (sample_width * channels))
+        w.writeframesraw(data)
 
 
 # format name -> (FFmpeg muxer, encoders to try in turn, default bitrate in bit/s or None)

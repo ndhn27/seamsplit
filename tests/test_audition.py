@@ -299,7 +299,8 @@ def test_the_page_carries_the_kit_and_the_player_and_needs_nothing_else(tmp_path
         "seams": [],
     }
     path = write_kit_page(str(tmp_path), kit)
-    page = open(path, encoding="utf-8").read()
+    with open(path, encoding="utf-8") as f:
+        page = f.read()
     assert os.path.basename(path) == KIT_PAGE
     assert "/*PLAYER*/" not in page and "/*KIT*/" not in page
     assert page.count("</script>") == 2  # the player's and the page's own
@@ -358,14 +359,25 @@ console.log(JSON.stringify({ player: keys(player.SeamAudition.TEXT), host: keys(
     assert set(keys["host"]["en"]) == set(keys["host"]["vi"])
 
 
+def _cannot_run(reason):
+    """Skip on a machine that has no browser; fail in CI, where a skip would hide that the
+    page was never tried (CI is set by GitHub Actions and most other runners)."""
+    if os.environ.get("CI"):
+        pytest.fail(f"{reason} (CI must run this test: see the browser step in ci.yml)")
+    pytest.skip(reason)
+
+
 def _browser():
-    sync_api = pytest.importorskip("playwright.sync_api")
+    try:
+        from playwright import sync_api
+    except ImportError as exc:
+        _cannot_run(f"playwright is not installed: {exc}")
     playwright = sync_api.sync_playwright().start()
     try:
         return playwright, playwright.chromium.launch()
     except Exception as exc:  # no browser installed here
         playwright.stop()
-        pytest.skip(f"no browser to run the page in: {exc}")
+        _cannot_run(f"no browser to run the page in: {exc}")
 
 
 def test_the_page_works_in_a_browser_and_its_answers_load_back(service, tmp_path):

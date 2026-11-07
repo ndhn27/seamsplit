@@ -366,7 +366,8 @@ def test_the_report_is_written_from_the_results(
         with open(os.path.join(str(tmp_path), name + ".json"), "w") as f:
             json.dump(data, f, default=float)
     path = report.write(str(tmp_path))
-    text = open(path, encoding="utf-8").read()
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
     for heading in (
         "## What it was measured on",
         "## 1. Seams",

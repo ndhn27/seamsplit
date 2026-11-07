@@ -132,7 +132,8 @@ def test_a_renamed_file_that_is_no_chunk_is_listed_as_not_one(service, tmp_path)
     folder = _renamed(service, tmp_path, [0, 1])
     stranger = np.random.default_rng(4).standard_normal((1, SR * 15)) * 0.2
     to_segment(stranger).export(os.path.join(folder, "instrumental other.wav"), format="wav")
-    (open(os.path.join(folder, "instrumental notes.txt"), "w")).write("not audio")
+    with open(os.path.join(folder, "instrumental notes.txt"), "w") as f:
+        f.write("not audio")
     status = compute_status(service.chunks_dir, folder, ("instrumental",))
     assert status.pending_parts() == [3]
     assert [os.path.basename(p) for p in status.unmatched] == ["instrumental other.wav"]

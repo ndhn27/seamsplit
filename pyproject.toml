@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "seamsplit"
-version = "1.1.0a"
+version = "1.1.1"
 description = "Split audio into overlapping chunks for AI stem separation, then merge them back with a crossfade."
 readme = "README.md"
 requires-python = ">=3.10"

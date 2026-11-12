@@ -226,9 +226,11 @@ def test_a_new_merge_replaces_the_kit_and_its_answers(gui, served):
 
 def test_a_new_split_clears_the_kit_too(gui, served):
     _merge(gui, match="instrumental", audition="all")
-    status, started = gui.json(
-        "POST", "/api/split", {"limit": "20", "format": "wav", "overlap": "2"}
-    )
+    split = {"limit": "20", "format": "wav", "overlap": "2"}
+    status, refused = gui.json("POST", "/api/split", split)  # the kit and its answers are theirs
+    assert status == 409 and refused["confirm"]["audition"] >= 1
+    assert gui.json("GET", "/api/state")[1]["audition"] is True
+    status, started = gui.json("POST", "/api/split", {**split, "replace": True})
     assert gui.wait(started["job"])["state"] == "done"
     assert gui.json("GET", "/api/state")[1]["audition"] is False
 

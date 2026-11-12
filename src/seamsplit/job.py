@@ -134,6 +134,20 @@ def main_and_other(stems: List[Optional[str]]) -> "tuple[Optional[str], Optional
     return main, next(w for w in words if w != main)
 
 
+_SPLIT_LEFTOVER = re.compile(r"_part\d+\.[A-Za-z0-9]+$")
+
+
+def _drop_unfinished_split(chunks: str) -> None:
+    """Remove the chunks (and the unfinished manifest) that an interrupted split left in
+    ``chunks``. Only files the split makes are touched: anything else stays, and a new job
+    is then refused as usual because the folder is not empty."""
+    if not os.path.isdir(chunks):
+        return
+    for name in os.listdir(chunks):
+        if _SPLIT_LEFTOVER.search(name) or name == MANIFEST_FILE + ".tmp":
+            os.remove(os.path.join(chunks, name))
+
+
 def _slug(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", text).strip("._") or "song"
 
@@ -177,6 +191,22 @@ def run_job(
     chunks = chunks_dir(folder)
     processed = processed_dir(folder)
     result_split = False
+
+    if job is not None and not os.path.isfile(os.path.join(chunks, MANIFEST_FILE)):
+        # job.json is written before the split, manifest.json after it: this job was
+        # stopped in the middle of its split. Nothing in it is worth keeping but what it
+        # was for, so what it left is dropped and it starts again, from the same file and
+        # backend unless another is named.
+        if input_file is None or os.path.abspath(input_file) == job.input_file:
+            if not os.path.isfile(job.input_file):  # nothing can be redone: leave it as it is
+                raise FileNotFoundError(f"The job's audio file is gone: '{job.input_file}'")
+        say("The split of this job was interrupted: doing it again.")
+        if input_file is None:
+            input_file = job.input_file
+        if backend is None and job.backend is not None:
+            backend = backend_from_dict(job.backend)
+        _drop_unfinished_split(chunks)
+        job = None
 
     if job is not None:
         if input_file is not None and os.path.abspath(input_file) != job.input_file:
@@ -229,10 +259,12 @@ def run_job(
             "overlap_s": config.overlap_s,
             "format": config.export_format,
         }
+        # Before the split, not after it: a run that is killed in the middle leaves a job
+        # that can be picked up again, not a folder of chunks that nothing explains.
+        save_job(folder, job)
         manifest = split_audio(job.input_file, config)
         say(f"  {len(manifest['parts'])} chunk(s) written to {chunks}")
         result_split = True
-        save_job(folder, job)
     os.makedirs(processed, exist_ok=True)
 
     stems = job_stems(job, match, other_match)

@@ -1,10 +1,16 @@
 name: Release programs
 
 # One self-contained program per system (Python, numpy, PyAV with its FFmpeg inside),
-# built with PyInstaller from packaging/seamsplit.spec. A tag like v1.0.0 (it must be the
+# built with PyInstaller from packaging/seamsplit.spec. A tag like v1.2.3 (it must be the
 # package version) builds them and attaches them to a release, with a BUILD_INFO file per system
 # and the notices of what is inside; the description of the release is that version's section of
 # CHANGELOG.md. "Run workflow" builds them as downloadable artifacts only.
+#
+# Every action is pinned to a commit (the comment after the SHA is the version it is), not to a
+# tag: a tag can be moved to other code, a commit cannot. .github/dependabot.yml proposes the
+# updates. The build tool is pinned in packaging/requirements-build.txt. The programs get a
+# signed provenance attestation (see "Attest the programs" below): SHA256SUMS-*.txt, which sits
+# next to the files it lists, only shows that a download is whole.
 on:
   push:
     tags: ["v*"]
@@ -22,15 +28,15 @@ jobs:
           - {os: macos-15-intel, name: macos-x86_64, exe: seamsplit}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
 
       - name: Build
         run: |
-          pip install . pyinstaller
+          pip install . -r packaging/requirements-build.txt
           pyinstaller packaging/seamsplit.spec --noconfirm
 
       - name: The tag is the package version
@@ -59,7 +65,7 @@ jobs:
           (sha256sum "${files[@]}" 2>/dev/null || shasum -a 256 "${files[@]}") > SHA256SUMS-${{ matrix.name }}.txt
           (sha256sum -c SHA256SUMS-${{ matrix.name }}.txt 2>/dev/null || shasum -a 256 -c SHA256SUMS-${{ matrix.name }}.txt)
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: seamsplit-${{ matrix.name }}
           path: out/*
@@ -70,16 +76,27 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write # to get the signing certificate (Sigstore) the attestation is made with
+      attestations: write # to store the attestation with the repository
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: out
           merge-multiple: true
 
       - name: Licence and notices go with the programs
         run: cp LICENSE THIRD_PARTY_NOTICES.md out/
+
+      # Signed by GitHub's Sigstore identity for this workflow run: it says which repository,
+      # workflow and commit built each program, and a program that was replaced afterwards no
+      # longer matches it. Check with: gh attestation verify <file> --repo ndhn27/seamsplit
+      # (docs/packaging.md). Needs a public repository on a free plan.
+      - name: Attest the programs
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: out/seamsplit-*
 
       - name: Release notes from CHANGELOG.md
         run: |
@@ -90,7 +107,7 @@ jobs:
             exit 1
           fi
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: out/*
           body_path: notes.md

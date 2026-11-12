@@ -10,9 +10,13 @@ that is stopped can be started again and carries on with the chunks that are not
 
 Nothing here uploads anything, and nothing here is a separator: the quality is the
 program's. The command lines and output names of the presets are those the programs'
-documentation gives; they have not been run against the real programs from here, and a
-run that cannot find the stems says which files the program wrote, which is what to
-adjust (``--backend-cmd`` and ``--backend-stem`` take over completely).
+documentation gives. The ``audio-separator`` preset (``uvr`` is the same) has been run
+against the real program: the benchmark's experiment 6 runs ``seamsplit run`` with
+audio-separator 0.48.0 and the ``UVR-MDX-NET-Voc_FT.onnx`` model, from the audio file to
+the merged stems (``benchmarks/results/RESULTS.md``). The ``demucs`` preset has only been
+tested against the stand-in the tests use (``tests/fake_programs.py``), not the real
+Demucs. A run that cannot find the stems says which files the program wrote, which is what
+to adjust (``--backend-cmd`` and ``--backend-stem`` take over completely).
 """
 
 from __future__ import annotations

@@ -89,9 +89,9 @@ ul.files { margin: 8px 0; padding-left: 20px; color: var(--muted); font-size: 13
         <span data-i18n="limitHint"></span></label>
       <label class="field"><span data-i18n="format"></span>
         <select id="format">
-          <option value="mp3" data-i18n="fmtMp3"></option>
           <option value="flac" data-i18n="fmtFlac"></option>
           <option value="wav" data-i18n="fmtWav"></option>
+          <option value="mp3" data-i18n="fmtMp3"></option>
         </select>
         <span data-i18n="formatHint"></span></label>
     </div>
@@ -157,7 +157,7 @@ ul.files { margin: 8px 0; padding-left: 20px; color: var(--muted); font-size: 13
         <label class="field"><span data-i18n="method"></span>
           <select id="method"></select></label>
         <label class="field"><span data-i18n="samplerate"></span>
-          <select id="samplerate"><option value="44100">44100</option><option value="48000">48000</option></select></label>
+          <select id="samplerate"><option value="" data-i18n="rateKeep"></option><option value="44100">44100</option><option value="48000">48000</option></select></label>
       </div>
       <label class="check"><input type="checkbox" id="seam-search">
         <span><span data-i18n="seamSearch"></span><br><span class="muted" data-i18n="seamSearchHint"></span></span></label>
@@ -205,8 +205,8 @@ const TEXT = {
     splitTitle: "1. Split", dropSplit: "Drop a track here, or click to choose one",
     service: "Service preset", serviceNone: "— none (set it yourself) —",
     limit: "Your service's limit per file (seconds)", limitHint: "Chunks are cut so that none is longer than this.",
-    format: "Chunk format", formatHint: "FLAC and WAV avoid MP3's quality loss and encoder delay, if your service accepts them.",
-    fmtMp3: "MP3 (smallest)", fmtFlac: "FLAC (lossless, half the size of WAV)", fmtWav: "WAV (lossless)",
+    format: "Chunk format", formatHint: "FLAC and WAV avoid the quality loss and encoder delay MP3 adds at every seam. Pick MP3 only if your service rejects them.",
+    fmtMp3: "MP3 (smallest, lossy)", fmtFlac: "FLAC (lossless, half the size of WAV)", fmtWav: "WAV (lossless)",
     advanced: "Advanced", overlap: "Overlap (seconds)", beforeSlack: "Before-slack (seconds)", afterSlack: "After-slack (seconds)",
     splitBtn: "Split", reading: "Reading and analysing…", exporting: "Exporting {i}/{n}: {name}",
     splitDone: "Done: {n} chunks.", colName: "Chunk", colStart: "Start", colEnd: "End", colLen: "Length",
@@ -215,10 +215,14 @@ const TEXT = {
     mergeIntro: "Send the chunks to your AI service, download what it returns, then drop those files here.",
     dropMerge: "Drop the processed chunks here (and manifest.json, if you did not split in this session)",
     files: "{n} processed file(s)", clear: "Clear", more: "… and {n} more",
+    delProcessed: "{n} processed file(s)", delMerged: "{n} merged file(s) and reports",
+    delAudition: "the listening kit and your answers", delManifest: "the manifest you dropped",
+    confirmSplit: "A new split deletes the chunks of the previous one, and also: {what}. This cannot be undone. Continue?",
+    confirmClear: "Remove the {n} processed file(s)? This cannot be undone.",
     manifestSplit: "Using the manifest from the split above.", manifestUploaded: "Using the manifest.json you dropped.",
     manifestNone: "No manifest yet: split a track above, or drop its manifest.json here.",
     match: "Only use files whose name contains (optional)", matchHint: "Services often return several files per chunk (vocals, instrumental…). Type a word from the name of the one you want.",
-    outFormat: "Output format", method: "Crossfade curve", samplerate: "Sample rate (Hz)",
+    outFormat: "Output format", method: "Crossfade curve", samplerate: "Sample rate (Hz)", rateKeep: "Same as the chunks (no resampling)",
     mergeBtn: "Merge", merging: "Merging…", mergeDone: "Merged ({len}).", download: "Download {file}",
     seams: "{n} seam(s); the chunks agree to {db} dB at worst.", seamsNone: "{n} seam(s).",
     flagged: "{n} seam(s) worth a listen, at: {times}", workdir: "Work folder: {path}", error: "Error: {msg}",
@@ -252,8 +256,8 @@ const TEXT = {
     splitTitle: "1. Chia", dropSplit: "Kéo thả bài hát vào đây, hoặc bấm để chọn",
     service: "Preset dịch vụ", serviceNone: "— không (tự đặt) —",
     limit: "Giới hạn mỗi file của dịch vụ (giây)", limitHint: "Các chunk được cắt để không chunk nào dài hơn mức này.",
-    format: "Định dạng chunk", formatHint: "FLAC và WAV tránh được việc MP3 mất chất lượng và bị trễ do encoder, nếu dịch vụ của bạn nhận.",
-    fmtMp3: "MP3 (nhỏ nhất)", fmtFlac: "FLAC (không mất dữ liệu, nhỏ bằng nửa WAV)", fmtWav: "WAV (không mất dữ liệu)",
+    format: "Định dạng chunk", formatHint: "FLAC và WAV tránh được việc MP3 mất chất lượng và bị trễ do encoder ở mỗi mối nối. Chỉ chọn MP3 nếu dịch vụ của bạn không nhận hai định dạng kia.",
+    fmtMp3: "MP3 (nhỏ nhất, mất dữ liệu)", fmtFlac: "FLAC (không mất dữ liệu, nhỏ bằng nửa WAV)", fmtWav: "WAV (không mất dữ liệu)",
     advanced: "Nâng cao", overlap: "Phần chồng lấp (giây)", beforeSlack: "Rút ngắn tối đa (giây)", afterSlack: "Kéo dài tối đa (giây)",
     splitBtn: "Chia", reading: "Đang đọc và phân tích…", exporting: "Đang xuất {i}/{n}: {name}",
     splitDone: "Xong: {n} chunk.", colName: "Chunk", colStart: "Bắt đầu", colEnd: "Kết thúc", colLen: "Độ dài",
@@ -262,10 +266,14 @@ const TEXT = {
     mergeIntro: "Gửi các chunk cho dịch vụ AI, tải kết quả về, rồi kéo thả các file đó vào đây.",
     dropMerge: "Kéo thả các chunk đã xử lý vào đây (cùng manifest.json nếu bạn không chia trong phiên này)",
     files: "{n} file đã xử lý", clear: "Xóa", more: "… và {n} file nữa",
+    delProcessed: "{n} file đã xử lý", delMerged: "{n} file đã ghép và báo cáo",
+    delAudition: "bộ nghe thử và các câu trả lời của bạn", delManifest: "manifest bạn đã thả vào",
+    confirmSplit: "Split mới sẽ xóa các chunk của lần split trước, và cả: {what}. Không thể hoàn tác. Tiếp tục?",
+    confirmClear: "Xóa {n} file đã xử lý? Không thể hoàn tác.",
     manifestSplit: "Đang dùng manifest từ bước chia ở trên.", manifestUploaded: "Đang dùng manifest.json bạn vừa thả.",
     manifestNone: "Chưa có manifest: hãy chia một bài ở trên, hoặc thả manifest.json của nó vào đây.",
     match: "Chỉ dùng file có tên chứa (tùy chọn)", matchHint: "Dịch vụ thường trả nhiều file cho mỗi chunk (vocals, instrumental…). Gõ một từ có trong tên file bạn muốn.",
-    outFormat: "Định dạng đầu ra", method: "Đường cong crossfade", samplerate: "Tần số lấy mẫu (Hz)",
+    outFormat: "Định dạng đầu ra", method: "Đường cong crossfade", samplerate: "Tần số lấy mẫu (Hz)", rateKeep: "Giữ nguyên như chunk (không resample)",
     mergeBtn: "Ghép", merging: "Đang ghép…", mergeDone: "Đã ghép ({len}).", download: "Tải {file}",
     seams: "{n} mối nối; các chunk khớp nhau ít nhất {db} dB.", seamsNone: "{n} mối nối.",
     flagged: "{n} mối nối nên nghe lại, tại: {times}", workdir: "Thư mục làm việc: {path}", error: "Lỗi: {msg}",
@@ -330,7 +338,7 @@ async function api(path, opts) {
   const res = await fetch(path + "?" + query, init);
   let data = {};
   try { data = await res.json(); } catch (e) { /* not JSON */ }
-  if (!res.ok) throw new Error(data.error || res.statusText);
+  if (!res.ok) { const err = new Error(data.error || res.statusText); err.data = data; throw err; }
   return data;
 }
 
@@ -442,6 +450,7 @@ function render() {
       lines.forEach(([text, cls]) => { const p = document.createElement("p"); p.className = cls; p.textContent = text; box.append(p); });
     }
   }
+  $("clear-processed").disabled = busy || state.busy;
   $("split-btn").disabled = busy || !inp;
   $("merge-btn").disabled = busy || n === 0 || !state.manifest;
   $("split-cancel").hidden = !(running && running.kind === "split");
@@ -580,12 +589,29 @@ function setupServices(info) {
   });
 }
 
+// What a new split deletes besides the old chunks: the user's own work, which can't be made again
+// here (the service's results, the merged file, the listening answers, a dropped manifest).
+function splitDeletes() {
+  const what = [];
+  if (state.processed.length) what.push(t("delProcessed", { n: state.processed.length }));
+  const merged = state.merged.length + state.reports.length;
+  if (merged) what.push(t("delMerged", { n: merged }));
+  if (state.audition) what.push(t("delAudition"));
+  if (state.manifest === "uploaded") what.push(t("delManifest"));
+  return what;
+}
 $("split-btn").addEventListener("click", () => {
   const num = (id) => $(id).value;
-  run("split", {
+  const payload = {
     limit: num("limit"), format: num("format"), overlap: num("overlap"),
     before_slack: num("before"), after_slack: num("after"),
-  });
+  };
+  const what = splitDeletes();
+  if (what.length) {
+    if (!window.confirm(t("confirmSplit", { what: what.join(", ") }))) return;
+    payload.replace = true; // the server refuses to delete them otherwise
+  }
+  run("split", payload);
 });
 $("merge-btn").addEventListener("click", () => {
   run("merge", {
@@ -604,7 +630,10 @@ $("merge-btn").addEventListener("click", () => {
 }));
 ["out-format", "seam-search"].forEach((id) => $(id).addEventListener("change", render));
 $("clear-processed").addEventListener("click", async () => {
-  await api("/api/clear", { method: "POST", params: { area: "processed" } });
+  if (!window.confirm(t("confirmClear", { n: state.processed.length }))) return;
+  try {
+    await api("/api/clear", { method: "POST", params: { area: "processed" } });
+  } catch (err) { showError($("merge-status"), err); }
   await refresh();
 });
 $("open-folder").addEventListener("click", () => api("/api/open-folder", { method: "POST" }).catch(() => {}));

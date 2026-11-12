@@ -1,12 +1,11 @@
-"""``seamsplit.audio`` against pydub, the library it replaces: the same operations on the
+"""``seamsplit.audio`` against pydub, used here as the reference: the same operations on the
 same samples must give the same bytes.
 
-pydub is not a dependency any more; this file runs only where it is installed (``pip
-install pydub``, and ``audioop-lts`` on Python 3.13 and later) and is skipped otherwise. It
-is the evidence that the replacement changed nothing a merge depends on: slicing, gain,
-fades, sample width and channel changes all come out byte for byte the same. (Sample rate
-conversion is the deliberate exception: FFmpeg's resampler replaces ``audioop.ratecv``,
-which aliases, and is checked on its own in ``test_audio.py``.)
+pydub is not a dependency; this file runs only where it is installed (``pip install
+pydub``, and ``audioop-lts`` on Python 3.13 and later) and is skipped otherwise. Slicing,
+gain, fades, sample width and channel changes all come out byte for byte the same. (Sample
+rate conversion differs on purpose: FFmpeg's resampler is used instead of
+``audioop.ratecv``, which aliases, and it is checked on its own in ``test_audio.py``.)
 """
 
 import warnings

@@ -93,7 +93,12 @@ def add_parsers(subparsers: Any) -> None:
         "--out-format", default="wav", help="Format of the merged files (default: wav)."
     )
     run_p.add_argument("--method", choices=list(METHODS), default=DEFAULT_METHOD)
-    run_p.add_argument("--samplerate", type=int, default=44100)
+    run_p.add_argument(
+        "--samplerate",
+        type=int,
+        default=None,
+        help="Output sample rate in Hz (default: the chunks' own, so nothing is resampled)",
+    )
     run_p.add_argument(
         "--anchor", action="store_true", help="Anchor the merge to the original chunks (see merge)."
     )
@@ -218,6 +223,12 @@ def status_command(args: argparse.Namespace) -> int:
     job = load_job(folder)
     if job is not None:
         chunks = os.path.join(folder, CHUNKS_DIR)
+        if not os.path.isfile(os.path.join(chunks, MANIFEST_FILE)):
+            raise ValueError(
+                f"The split of the job in '{folder}' was interrupted (there is no "
+                f"{MANIFEST_FILE} in {chunks}): run the same `run --job {folder}` again to "
+                "redo it"
+            )
         processed = args.processed or os.path.join(folder, PROCESSED_DIR)
         stems = job_stems(job, args.match, args.other_match)
     elif os.path.isfile(os.path.join(folder, MANIFEST_FILE)):

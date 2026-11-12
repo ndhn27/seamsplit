@@ -1,33 +1,19 @@
-"""``seamsplit.merger`` is the entry point of a merge, whose code lives in small modules;
-the names those modules define must be importable from it."""
+"""``seamsplit.merger`` is the entry point of a merge, whose code lives in small modules.
+The public names those modules define for a merge stay importable from it, and ``__all__``
+is the list: a name with a leading underscore is private to its module and is not part of it."""
 
 import importlib
 
 import pytest
 
-# name -> the module that defines it
+# name -> the module that defines it (public names only: this is the contract)
 MOVED = {
-    "report": ["BoundaryInfo", "ChunkInfo", "MergeReport", "format_time", "_emit"],
-    "checks": [
-        "_JSON_TYPE_NAMES",
-        "_describe",
-        "_number_problem",
-        "_check_number",
-        "_check_samplerate",
-        "_check_merge_options",
-        "_check_threshold",
-    ],
-    "manifest": ["_part_name_problem", "load_manifest"],
+    "report": ["BoundaryInfo", "ChunkInfo", "MergeReport", "format_time"],
+    "manifest": ["load_manifest"],
     "matching": [
         "AUDIO_EXTENSIONS",
-        "_list_files",
-        "_stem_matches",
-        "_ambiguous",
-        "_filtered_by",
         "find_processed_file",
         "find_original_chunks",
-        "_natural_key",
-        "_named_list",
         "find_processed_files",
         "PairedFiles",
         "pair_processed_files",
@@ -35,22 +21,7 @@ MOVED = {
     "dsp": [
         "MIN_ALIGN_CORRELATION",
         "LEVEL_DEADBAND_DB",
-        "_SLERP_EPS",
-        "_SEAM_GUARD_FRAC",
-        "_SEAM_FLOOR_DB",
-        "_SEAM_TIE",
-        "_MATCH_CAP_DB",
-        "_DTYPES",
-        "_to_int_array",
-        "_to_mono",
         "estimate_lag",
-        "_linear_gains",
-        "_equal_power_gains",
-        "_adaptive_gains",
-        "_fade_gains",
-        "_overlapping_parts",
-        "_ncc",
-        "_level_ratio",
         "match_db",
         "find_seam",
     ],
@@ -61,22 +32,35 @@ MOVED = {
         "DEFAULT_MAX_GAIN_DB",
         "DEFAULT_SEAM_FADE_MS",
         "DEFAULT_SEAM_WARN_DB",
-        "_crossfade_merge",
         "adaptive_crossfade_merge",
         "linear_crossfade_merge",
         "equal_power_crossfade_merge",
     ],
-    "plan": ["DEFAULT_LENGTH_TOLERANCE_MS", "_check_part_length", "MergePlan"],
+    "plan": ["DEFAULT_LENGTH_TOLERANCE_MS", "MergePlan"],
     "merger": ["merge_audio"],
 }
 CASES = [(module, name) for module, names in MOVED.items() for name in names]
 
 
 @pytest.mark.parametrize("module, name", CASES)
-def test_every_name_is_still_importable_from_seamsplit_merger(module, name):
+def test_every_public_name_is_importable_from_seamsplit_merger(module, name):
     merger = importlib.import_module("seamsplit.merger")
     defined_in = importlib.import_module(f"seamsplit.{module}")
     assert getattr(merger, name) is getattr(defined_in, name)
+
+
+def test_all_lists_exactly_the_public_names_and_none_that_is_private():
+    merger = importlib.import_module("seamsplit.merger")
+    expected = sorted(name for _, name in CASES)
+    assert sorted(merger.__all__) == expected
+    assert not [name for name in merger.__all__ if name.startswith("_")]
+
+
+def test_star_import_gives_the_public_names_and_not_the_private_helpers():
+    namespace: dict = {}
+    exec("from seamsplit.merger import *", namespace)
+    names = {name for name in namespace if name != "__builtins__"}
+    assert names == {name for _, name in CASES}
 
 
 def test_the_modules_stay_small_enough_to_read():
@@ -86,6 +70,7 @@ def test_the_modules_stay_small_enough_to_read():
 
     root = pathlib.Path(seamsplit.__file__).parent
     modules = list(MOVED) + [
+        "checks",
         "cutpoints",
         "audio",
         "audio_io",

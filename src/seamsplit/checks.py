@@ -73,10 +73,13 @@ def _check_number(name: str, value: Any, *, positive: bool = False) -> float:
     return number
 
 
-def _check_samplerate(value: Any) -> int:
-    """``samplerate`` must be a whole number of Hz greater than 0. It is only
-    used for the final resample, so a bad one is rejected up front instead of surfacing
-    (as an error from the audio library) after every chunk has been loaded and merged."""
+def _check_samplerate(value: Any) -> Optional[int]:
+    """``samplerate`` is ``None`` (keep the rate the chunks have) or a whole number of Hz
+    greater than 0. It is only used for the final resample, so a bad one is rejected up
+    front instead of surfacing (as an error from the audio library) after every chunk has
+    been loaded and merged."""
+    if value is None:
+        return None
     if isinstance(value, bool) or not isinstance(value, numbers.Integral) or value <= 0:
         raise ValueError(f"samplerate must be a positive whole number (Hz), got {value!r}")
     return int(value)

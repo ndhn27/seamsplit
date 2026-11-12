@@ -50,7 +50,7 @@ Browser-based vocal/instrumental separators usually cap an upload at about a min
 song.mp3
    │
    ▼ seamsplit split
-chunks/part01.mp3, chunks/part02.mp3, ... + chunks/manifest.json
+chunks/part01.flac, chunks/part02.flac, ... + chunks/manifest.json
    │
    ▼ run each chunk through your AI separator (keep the order; renaming is fine)
 processed/part01_instrumental.mp3, processed/part02_instrumental.mp3, ...
@@ -77,6 +77,16 @@ seamsplit run song.mp3 --backend demucs     # or separate on this computer: no l
 - **Anchoring and a listening kit.** Compare every chunk with the original it was made from, merge both stems together, and listen to the seams on a blind listening page. → [Anchoring and the listening kit](docs/anchoring-and-listening.md)
 - **One folder per job.** `run` and `status` resume where you left off, and can separate locally with Demucs or audio-separator. → [Jobs and local separation](docs/jobs-and-backends.md)
 - **A drag-and-drop page** (English and Vietnamese) that serves only `127.0.0.1`. → [Drag-and-drop interface](docs/gui.md)
+
+### How much of this is measured
+
+The [benchmark](benchmarks/README.md) separated real chunks with a real model and compared every way of joining them, and it supports less than the list above suggests. It is small: five short songs (10–30 s), chunks of 8 s, one separation model. A real chunk is closer to 59 s, which it did not test.
+
+- **Overlap is what helps:** 4.7 dB better at the seams than cutting without overlap.
+- **The crossfade on top** adds under 1 dB at the median, and the 95 % interval of its mean gain includes 0 on every set of chunks. `linear` and the default `adaptive` score the same; `equalpower` is a median 16 dB *worse* than a hard cut (the page does not offer it).
+- **No measurable gain** from `--seam-search`, `--anchor` or cutting by the voice band, on clean chunks. Quiet cuts do lower the click measure at the join, but not the error against the whole-song separation.
+- **Not tested on real services:** timing alignment and level matching matter a lot against *simulated* damage (a shifted or re-leveled chunk), and nothing here shows that real services do that.
+- **The model dominates:** the separator's own error against the true stems (about 11 dB) is far larger than anything the joining changes.
 
 ## 📚 Documentation
 

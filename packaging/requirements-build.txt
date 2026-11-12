@@ -1,0 +1,5 @@
+# The tool that builds the one-file programs (packaging/seamsplit.spec). Pinned so that a
+# release is built with a version that has been looked at, not with whatever is newest that
+# day; .github/dependabot.yml proposes updates. numpy and PyAV come from `pip install .`
+# (their versions are written to BUILD_INFO-<system>.txt in each release).
+pyinstaller==6.22.3

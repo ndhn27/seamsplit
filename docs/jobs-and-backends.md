@@ -29,6 +29,13 @@ the main options of `merge` (`--method`, `--anchor`, `--pairing`, `--samplerate`
 Exit status is 0 when the job is done, 3 when it waits for something, 1 for an error. A job
 belongs to one song and one backend: another song, or another backend, needs another folder.
 
+`job.json` is written before the split starts and `manifest.json` after it, so a `run` that was
+killed in the middle of splitting (a power cut, `kill -9`) leaves a job with no manifest. Running
+the same command again says so, drops the half-written chunks (only files a split makes) and splits
+again from the start; it does not need the folder to be emptied by hand. Because nothing was
+separated yet, that restart may also name another song or backend. `status` on such a folder tells
+you to run it again.
+
 `status` also works on a plain `split` folder (`seamsplit status chunks/ --processed
 processed/`). Files are found by chunk name; a file whose name was lost is compared with the
 original chunks, and if it is clearly one of the chunks that has no file, it counts for that chunk.
@@ -57,7 +64,11 @@ fewer chunks mean fewer seams); that default is a convenience of mine, not a mea
 This turns SeamSplit into a way to separate a song of any length with whatever engine is installed:
 the program decides the quality, SeamSplit does the cutting, resuming and merging.
 **What is and is not checked:** the command lines and output names of the `demucs` and
-`audio-separator` presets follow those programs' documentation, but they have been tested only
-against stand-in programs that write the same names, not against the real Demucs or UVR models. If
-a real program names its files differently, the error lists what it wrote, and `--backend-cmd` with
-`--backend-stem` takes over completely.
+`audio-separator` presets follow those programs' documentation. The `audio-separator` preset has
+been run against the real program: the [benchmark](../benchmarks/README.md) (experiment 6) runs
+`seamsplit run` with audio-separator 0.48.0 and the `UVR-MDX-NET-Voc_FT.onnx` model on one song,
+from the audio file to merged stems, and again to see that nothing is left to do. Only one song
+and one model were tried, so another model that names its files differently may need
+`--backend-cmd`. The `demucs` preset has been tested only against a stand-in program that writes
+the same names, not against the real Demucs. If a real program names its files differently, the
+error lists what it wrote, and `--backend-cmd` with `--backend-stem` takes over completely.

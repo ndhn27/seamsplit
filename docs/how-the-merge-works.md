@@ -64,7 +64,10 @@ The overlap holds the same stretch of music in both chunks, but after
 independent separation the two versions are alike, not identical, so `rho` is
 somewhere below 1. A fixed `linear` fade then dips mid-seam (about −1.2 dB
 at `rho = 0.5`), and a fixed `equalpower` fade rises (+1.8 dB at `rho = 0.5`,
-+3 dB at `rho = 1`). `adaptive` removes the guesswork: it is exactly `linear`
++3 dB at `rho = 1`). In the [benchmark](../benchmarks/README.md), on real separated chunks,
+`equalpower` came out a median 16 dB worse than a hard cut at the seams, which is why the page
+does not offer it, while `linear` and `adaptive` could not be told apart. `adaptive` removes the
+guesswork: it is exactly `linear`
 at `rho = 1`, the sine/cosine equal-power law at `rho = 0`, and keeps
 `gain_out² + gain_in² + 2·rho·gain_out·gain_in = 1` (constant power) for every
 value in between. The correlation is measured per boundary, after alignment,

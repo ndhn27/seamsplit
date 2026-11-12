@@ -5,7 +5,7 @@ else has to be installed on the machine that runs it.
 
 Build (from the repository root, in an environment with the package and PyInstaller):
 
-    pip install . pyinstaller
+    pip install . -r packaging/requirements-build.txt     # PyInstaller, at the pinned version
     pyinstaller packaging/seamsplit.spec --noconfirm
 
 The program is built for the system it is built on; there is no cross-compiling.

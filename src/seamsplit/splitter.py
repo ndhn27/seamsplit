@@ -349,7 +349,9 @@ class SplitConfig:
     fade_ms: float = 8.0
     min_final_s: float = 5.0
     output_dir: str = "chunks"
-    export_format: str = "mp3"  # "wav" / "flac" keep the chunks lossless (see docs/splitting.md)
+    export_format: str = (
+        "flac"  # lossless; "mp3" only if a service needs it (see docs/splitting.md)
+    )
     bitrate: str = "320k"  # lossy formats only; ignored for wav / flac / aiff
     # How the quiet point of each window is judged: "rms" is the loudness of the whole
     # signal; "voice" the activity in the voice band (see seamsplit.cutpoints).
@@ -567,6 +569,9 @@ def split_audio(
     }
     if not dry_run:
         manifest_path = os.path.join(config.output_dir, "manifest.json")
-        with open(manifest_path, "w", encoding="utf-8") as f:
+        # all at once: the manifest is what says the split is complete, so a kill while
+        # it is being written must not leave half of one
+        with open(manifest_path + ".tmp", "w", encoding="utf-8") as f:
             json.dump(manifest, f, ensure_ascii=False, indent=2)
+        os.replace(manifest_path + ".tmp", manifest_path)
     return manifest

@@ -44,27 +44,33 @@ Key options:
 | `--beat-tolerance-db` | `6` | With `--snap-beat`: how much louder than the quietest tenth of the window a point may be and still be chosen for lying on a beat. |
 | `--fade-ms` | `8` | Fade in/out (ms) applied only at the very start and end of the whole track — internal chunk edges are left raw since they'll be crossfaded during merge. |
 | `--min-final` | `5` | If the last chunk would be shorter than this (seconds), the last two chunks are re-divided so neither exceeds the length limit. Must be at most half of `--target` + `--after-slack`. |
-| `--format` | `mp3` | Export format of the chunks. `wav` or `flac` keep them lossless — see below. |
+| `--format` | `flac` | Export format of the chunks. `flac` and `wav` are lossless; `mp3` is lossy — see below. |
 | `--bitrate` | `320k` | Bitrate of lossy formats; ignored for `wav` / `flac`. |
 | `--out` | `chunks` | Output directory. |
 | `--dry-run` | off | Show the planned chunks (and the longest one) without writing anything. |
 
-**Lossless chunks.** MP3 is lossy and every encode shifts the audio: the encoder
-adds delay and padding (an MP3 of exactly 59.000 s reads 59.037 s), and the
-service decodes your chunk, separates it, and re-encodes it on top of that. If
-your AI service accepts them, split to `wav` or `flac` instead:
+**Lossless chunks (the default).** MP3 is lossy and every encode shifts the audio:
+the encoder adds delay and padding (an MP3 of exactly 59.000 s reads 59.037 s),
+and the service decodes your chunk, separates it, and re-encodes it on top of
+that. In a measurement on percussive music this cost the seams about 10 dB of SER
+compared with FLAC, even at 320k, so chunks are written as `flac` unless you say
+otherwise:
 
 ```bash
-seamsplit split "song.mp3" --limit 59 --format flac --out chunks/
+seamsplit split "song.mp3" --limit 59 --out chunks/                 # flac
+seamsplit split "song.mp3" --limit 59 --format wav --out chunks/    # if the service rejects flac
+seamsplit split "song.mp3" --limit 59 --format mp3 --out chunks/    # only if it takes nothing else
 ```
 
 A lossless chunk lasts exactly as long as the audio in it, so `--margin` is `0`
 and `--limit` can use the full limit. `flac` is about half the size of `wav` and
 decodes to the same samples (use `wav` if the service rejects `flac`). `--bitrate`
-does not apply. `merge` reads whatever the service returns, and writes `.wav` or
-`.flac` when `--out` ends in that extension.
+does not apply. With `--format mp3` the `--margin` default is `0.25` s again, for
+the padding. `merge` reads whatever the service returns, and writes `.wav` or
+`.flac` when `--out` ends in that extension. A preset can pin a format of its own
+(`"format": "mp3"` in a [service preset](#service-presets)) when a service needs it.
 
-This produces `chunks/<name>_part01.mp3`, `chunks/<name>_part02.mp3`, ... and
+This produces `chunks/<name>_part01.flac`, `chunks/<name>_part02.flac`, ... and
 `chunks/manifest.json`, which records the source file and length, the overlap
 length, the part order and each part's exact position — `seamsplit merge`
 needs it later. The output also tells you the longest chunk (and, with

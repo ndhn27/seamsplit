@@ -17,6 +17,14 @@ from seamsplit.splitter import (
 )
 
 
+def test_the_default_export_format_is_lossless():
+    from seamsplit.splitopts import DEFAULT_FORMAT
+
+    assert DEFAULT_FORMAT == "flac" and is_lossless(DEFAULT_FORMAT)
+    assert SplitConfig().export_format == DEFAULT_FORMAT
+    assert default_margin_s(SplitConfig().export_format) == 0.0
+
+
 def test_smooth_curve_reduces_spread():
     rms = np.array([1.0, 5.0, 1.0, 5.0, 1.0, 5.0, 1.0, 5.0, 1.0, 5.0], dtype=float)
     smoothed = smooth_curve(rms, hop_ms=10, smooth_ms=50)

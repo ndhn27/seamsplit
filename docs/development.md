@@ -16,13 +16,13 @@ The code is split by what it does, each module small enough to read:
 |---|---|
 | `splitter` | Cutting a track: the loudness curve, the search for cut points, the chunks and the manifest. |
 | `cutpoints` | What the search can know besides loudness: voice-band activity and beat tracking. |
-| `merger` | `merge_audio`, the entry point of a merge; it also re-exports the names the other modules define for a merge. |
+| `merger` | `merge_audio`, the entry point of a merge: it checks the options, pairs the files and exports, with a function for each of those stages; it also re-exports the public names the other modules define for a merge (`__all__` lists them). Names with a leading underscore are private to their module: import them from there. |
 | `manifest`, `checks` | Reading `manifest.json`; checking the numbers a caller passes. |
 | `matching` | Pairing the manifest's parts with the files that came back, by name or by order. |
 | `pairing` | Telling which chunk a file is by comparing it with the original chunks. |
 | `services`, `splitopts` | Service presets; the options that decide how a file is cut, shared by `split` and `run`. |
 | `status`, `job`, `backends`, `cli_jobs` | A job folder: what is missing, the resumable run, the programs that separate on this computer, and the `run` and `status` commands. |
-| `crossfade` | The merge itself: alignment, level matching, seam search, fades. |
+| `crossfade` | The merge itself: alignment, level matching, seam search, fades. `_crossfade_merge` is a loop of one step per boundary (`_measure`, `_place_fade`, `_blend`, `_Settled`). What is to be reported is returned by those steps and emitted by `_crossfade_merge` (and, in `merger`, by `merge_audio`) itself: without a report it becomes a warning that `_emit` points at the caller of the function it is called from, which has to be the caller of the merge. `tests/test_merge_stages.py` pins it. |
 | `anchor` | Comparing each chunk with its original, and merging both stems of a service as one. |
 | `plan` | `MergePlan`: a merge that has been set up (files, stems, options), which can be run over all the chunks or over just the two of a seam. |
 | `audition`, `choices` | The listening kit of a merge, and what is done with the answers given to it. |

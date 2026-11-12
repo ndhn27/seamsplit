@@ -136,6 +136,36 @@ def test_what_is_given_wins_and_the_preset_fills_the_rest():
     )
 
 
+def _namespace(**given):
+    import argparse
+
+    base = dict(
+        service=None, services_file=None, target=None, limit=None, format=None, overlap=None
+    )
+    return argparse.Namespace(**{**base, **given})
+
+
+def test_the_split_format_falls_back_to_flac_and_a_preset_or_flag_beats_it(tmp_path, capsys):
+    import json
+
+    from seamsplit.splitopts import apply_service
+
+    plain = _namespace()
+    apply_service(plain)
+    assert plain.format == "flac"
+
+    path = tmp_path / "services.json"
+    path.write_text(json.dumps({"picky": {"limit_s": 59, "format": "mp3"}}), encoding="utf-8")
+    from_preset = _namespace(service="picky", services_file=str(path))
+    apply_service(from_preset)
+    assert from_preset.format == "mp3"
+
+    flag_wins = _namespace(service="picky", services_file=str(path), format="wav")
+    apply_service(flag_wins)
+    assert flag_wins.format == "wav"
+    capsys.readouterr()
+
+
 def test_without_a_preset_nothing_changes():
     out = apply_preset(None, target=50.0, limit=None, fmt=None, overlap=None)
     assert out == {"limit": None, "fmt": None, "overlap": None, "notes": []}
@@ -170,16 +200,16 @@ def _split(song_file, tmp_path, capsys, *extra, expect=0):
 def test_service_sets_the_limit_and_the_target_follows_from_it(song_file, tmp_path, capsys):
     out = _split(song_file, tmp_path, capsys, "--service", "xminus").out
     assert "Service xminus: limit 59s." in out
-    # 59 - after-slack 3 - overlap 4 - the 0.25 s an MP3 adds
-    assert "Target chunk length: 51.75s (from --limit 59s" in out
+    # 59 - after-slack 3 - overlap 4; the default format is FLAC, so no margin for an encoder
+    assert "Target chunk length: 52s (from --limit 59s" in out
 
 
 def test_a_limit_given_beats_the_services_and_other_options_are_kept(song_file, tmp_path, capsys):
     out = _split(song_file, tmp_path, capsys, "--service", "xminus", "--limit", "40").out
     assert "Service xminus" not in out
-    assert "Target chunk length: 32.75s (from --limit 40s" in out
+    assert "Target chunk length: 33s (from --limit 40s" in out
     out = _split(song_file, tmp_path, capsys, "--service", "xminus", "--overlap", "2").out
-    assert "overlap 2s" in out and "Target chunk length: 53.75s" in out
+    assert "overlap 2s" in out and "Target chunk length: 54s" in out
 
 
 def test_a_service_with_a_format_and_overlap_fills_them_in(song_file, tmp_path, capsys):

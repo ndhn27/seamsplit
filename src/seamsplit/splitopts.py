@@ -12,7 +12,7 @@ from .splitter import DEFAULT_LOSSY_MARGIN_S, SplitConfig, default_margin_s
 
 DEFAULT_TARGET_S = 52.0
 DEFAULT_OVERLAP_S = 4.0
-DEFAULT_FORMAT = "mp3"
+DEFAULT_FORMAT = "flac"
 
 
 def add_split_options(parser: argparse.ArgumentParser) -> None:
@@ -174,9 +174,9 @@ def add_split_options(parser: argparse.ArgumentParser) -> None:
         default=None,
         help=(
             f"Export format of the chunks (default: {DEFAULT_FORMAT}, or the --service's). "
-            "Use wav or flac to avoid the "
-            "quality loss and the encoder delay/padding of MP3, if your AI service accepts "
-            "them (flac is about half the size of wav)."
+            "flac and wav are lossless: no quality loss and no encoder delay/padding, which "
+            "an MP3 adds at every seam (flac is about half the size of wav). Use mp3 only "
+            "if your AI service rejects both."
         ),
     )
     parser.add_argument(

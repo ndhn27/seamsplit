@@ -66,7 +66,7 @@ run them; their code is linted and tested like the rest. Read
    program on Linux, Windows and macOS (Apple silicon and Intel) and publishes nothing. Download
    the artifacts and read the `BUILD_INFO` files: PyAV and FFmpeg versions, licence line,
    options and libraries.
-3. Push a tag `vX.Y.Z`, for example `v1.0.0`. The workflow stops if the tag is not the package
+3. Push a tag `vX.Y.Z`, for example `v1.2.3`. The workflow stops if the tag is not the package
    version, or if `CHANGELOG.md` has no section for it; otherwise it attaches the programs,
    their SHA-256 sums, the `BUILD_INFO` files, `LICENSE` and `THIRD_PARTY_NOTICES.md` to the
    release, and uses that section of the changelog as its description.

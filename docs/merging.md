@@ -53,7 +53,7 @@ Key options:
 | `--manifest` | *(required)* | Path to the `manifest.json` produced by `seamsplit split`. |
 | `--overlap` | *(from manifest)* | Override the overlap length used for crossfading. |
 | `--match` | – | Filter which processed file to use when a part maps to several files. |
-| `--method` | `adaptive` | Crossfade curve: `adaptive` (shaped by how alike the two overlaps are), `linear` or `equalpower` — see [Choosing a crossfade curve](how-the-merge-works.md#choosing-a-crossfade-curve). |
+| `--method` | `adaptive` | Crossfade curve: `adaptive` (shaped by how alike the two overlaps are), `linear` or `equalpower` (a median 16 dB worse than a hard cut at the seams in the benchmark; the page does not offer it) — see [Choosing a crossfade curve](how-the-merge-works.md#choosing-a-crossfade-curve). |
 | `--no-align` | off | Skip the timing alignment between neighboring chunks. |
 | `--max-lag-ms` | `50` | Largest timing offset the alignment will look for. |
 | `--no-match-level` | off | Skip the loudness matching between neighboring chunks. |
@@ -74,7 +74,7 @@ Key options:
 | `--audition-max` | `12` | At most this many seams, the worst-agreeing first (not applied to a list of numbers). |
 | `--report` | – | Write the per-seam report to a file (JSON if it ends in `.json`, else Markdown). |
 | `--bitrate` | `320k` | Output MP3 bitrate. |
-| `--samplerate` | `44100` | Output sample rate. |
+| `--samplerate` | the chunks' own | Output sample rate in Hz. Left out, nothing is resampled: a 48 kHz result stays at 48 kHz. |
 
 ## Which file is which chunk
 

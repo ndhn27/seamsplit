@@ -107,7 +107,9 @@ def _build_parser() -> argparse.ArgumentParser:
             "Crossfade curve: adaptive (shaped by how similar the two overlap regions "
             "are: linear for identical audio, equal-power for unrelated audio, "
             "constant power in between), or the fixed curves linear / equalpower "
-            "(equalpower adds up to +3 dB mid-fade on identical audio). "
+            "(equalpower adds up to +3 dB mid-fade on identical audio, which is what two "
+            "separations of the same music are: in the benchmark it was a median 16 dB worse "
+            "than a hard cut at the seams). "
             f"(default: {DEFAULT_METHOD})"
         ),
     )
@@ -275,7 +277,10 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Output bitrate for lossy formats such as MP3; ignored for .wav/.flac (default: 320k)",
     )
     merge_p.add_argument(
-        "--samplerate", type=int, default=44100, help="Output sample rate (default: 44100)"
+        "--samplerate",
+        type=int,
+        default=None,
+        help="Output sample rate in Hz (default: the chunks' own, so nothing is resampled)",
     )
 
     add_job_parsers(subparsers)

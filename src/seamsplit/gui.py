@@ -29,6 +29,7 @@ can be cancelled; it stops at the next chunk.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import mimetypes
 import os
@@ -46,7 +47,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib import resources
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 from . import __version__
@@ -126,6 +127,31 @@ class Workspace:
         return [{"name": p.name, "size": p.stat().st_size} for p in sorted(found)]
 
 
+# The crossfade curves the page offers. ``equalpower`` stays available on the command line and
+# in the API, but it is the wrong fade for chunks that overlap on the same music (see
+# benchmarks/README.md: a median 16 dB worse than a hard cut at the seams), so the page,
+# which people pick from without reading, leaves it out.
+GUI_METHODS = tuple(m for m in METHODS if m != "equalpower")
+
+# What a new split deletes besides the old chunks. These are the user's own work (what the
+# AI service returned, the merged result, the listening answers, a dropped manifest): a split
+# only goes ahead over them once it has been told to (``replace``).
+REPLACED_BY_SPLIT = ("processed", "merged", "audition", "manifest")
+
+
+class ReplaceNeedsConfirmation(RuntimeError):
+    """A split would delete files the user may want to keep; ``counts`` says how many per
+    area. The answer is ``409`` with those counts, and the page asks before sending again."""
+
+    def __init__(self, counts: Dict[str, int]) -> None:
+        self.counts = counts
+        listed = ", ".join(f"{n} in {area}/" for area, n in counts.items())
+        super().__init__(
+            f"Splitting again would delete: {listed}. "
+            "Confirm it (replace: true) to go ahead, or keep those files by not splitting."
+        )
+
+
 class JobCancelled(Exception):
     """Raised inside a job, at a point where it can stop cleanly, once the user
     has asked to cancel it."""
@@ -190,7 +216,7 @@ def build_split_config(
     """Turn the form's values into a :class:`SplitConfig` (and the service
     limit, if one was given). Mirrors the CLI: ``limit`` derives the target
     as ``limit - after-slack - overlap - margin``."""
-    fmt = normalize_export_format(str(params.get("format") or "mp3"))
+    fmt = normalize_export_format(str(params.get("format") or "flac"))
     if fmt not in GUI_FORMATS:
         raise ValueError(f"format must be one of: {', '.join(GUI_FORMATS)}")
     after = _number(params, "after_slack", 3.0)
@@ -341,10 +367,36 @@ class GuiServer(ThreadingHTTPServer):
 
     # -- jobs ----------------------------------------------------------------
 
-    def start_job(self, kind: str, work: Callable[[Job], None]) -> Job:
+    def _running(self) -> bool:
+        return any(j.state == "running" for j in self.jobs.values())
+
+    @contextlib.contextmanager
+    def when_idle(self, what: str) -> Iterator[None]:
+        """Hold the job lock while no split or merge runs, and refuse (``RuntimeError``,
+        which is a ``409``) if one does. A job in the middle of its files must not have them
+        cleared or replaced under it, and none can start while this block runs."""
         with self.lock:
-            if any(j.state == "running" for j in self.jobs.values()):
+            if self._running():
+                raise RuntimeError(
+                    f"Cannot {what} while a split or merge is running: "
+                    "wait for it to finish, or cancel it"
+                )
+            yield
+
+    def start_job(
+        self,
+        kind: str,
+        work: Callable[[Job], None],
+        before: Optional[Callable[[], None]] = None,
+    ) -> Job:
+        """Start ``work`` in a thread. ``before`` runs under the job lock, with nothing
+        else running, and can refuse the job by raising: that is the one point where what
+        is on disk cannot change between the check and the job."""
+        with self.lock:
+            if self._running():
                 raise RuntimeError("Another job is still running")
+            if before is not None:
+                before()
             job = Job(kind)
             self.jobs[job.id] = job
 
@@ -361,6 +413,15 @@ class GuiServer(ThreadingHTTPServer):
 
         threading.Thread(target=run, daemon=True).start()
         return job
+
+    def confirm_split(self, params: Dict[str, Any]) -> None:
+        """Raise :class:`ReplaceNeedsConfirmation` if this split would delete the user's
+        processed, merged, listening or manifest files and ``replace`` was not given."""
+        if params.get("replace") in (True, 1, "true", "1"):
+            return
+        at_risk = {a: n for a in REPLACED_BY_SPLIT if (n := len(self.workspace.files(a)))}
+        if at_risk:
+            raise ReplaceNeedsConfirmation(at_risk)
 
     def split_work(self, params: Dict[str, Any]) -> Callable[[Job], None]:
         ws = self.workspace
@@ -410,8 +471,10 @@ class GuiServer(ThreadingHTTPServer):
         fmt = normalize_export_format(str(params.get("format") or "mp3"))
         if fmt not in GUI_FORMATS:
             raise ValueError(f"format must be one of: {', '.join(GUI_FORMATS)}")
-        samplerate = int(_number(params, "samplerate", 44100))
-        if samplerate <= 0:
+        # blank (the page's first choice) keeps the rate the chunks have
+        blank = params.get("samplerate") in (None, "")
+        samplerate = None if blank else int(_number(params, "samplerate", 0))
+        if samplerate is not None and samplerate <= 0:
             raise ValueError("samplerate must be greater than 0")
         match = str(params.get("match") or "").strip() or None
         other_match = str(params.get("other_match") or "").strip() or None
@@ -585,7 +648,7 @@ class _Handler(BaseHTTPRequestHandler):
                     "bitrates": list(BITRATES),
                     "seam_fade_ms": DEFAULT_SEAM_FADE_MS,
                     "workdir": str(ws.root),
-                    "methods": list(METHODS),
+                    "methods": list(GUI_METHODS),
                     "default_method": DEFAULT_METHOD,
                     **service_presets(),
                 }
@@ -649,7 +712,7 @@ class _Handler(BaseHTTPRequestHandler):
             "merged": [f for f in merged_files if not f["name"].endswith(REPORT_SUFFIXES)],
             "reports": [f["name"] for f in merged_files if f["name"].endswith(REPORT_SUFFIXES)],
             "audition": ws.path("audition", KIT_FILE).is_file(),
-            "busy": any(j.state == "running" for j in self.server.jobs.values()),
+            "busy": self.server._running(),
         }
 
     def _audition(self) -> Dict[str, Any]:
@@ -669,7 +732,9 @@ class _Handler(BaseHTTPRequestHandler):
         seam, choice = body.get("seam"), body.get("choice")
         if isinstance(seam, bool) or not isinstance(seam, int) or not isinstance(choice, str):
             raise ValueError("Expected a seam number and a choice")
-        with self.server.lock:  # two answers arriving together must not lose one
+        # two answers arriving together must not lose one, and the kit must not be
+        # rewritten by a merge while one is recorded
+        with self.server.when_idle("record an answer"):
             kit_path = ws.path("audition", KIT_FILE)
             if not kit_path.is_file():
                 raise ValueError("There is no listening kit to answer")
@@ -755,10 +820,16 @@ class _Handler(BaseHTTPRequestHandler):
                 area = (query.get("area") or [""])[0]
                 if area not in ("input", "processed", "manifest", "merged"):
                     raise ValueError("Unknown area")
-                ws.clear(area)
+                with self.server.when_idle("clear files"):
+                    ws.clear(area)
                 self._json({"ok": True})
             elif route == "/api/split":
-                job = self.server.start_job("split", self.server.split_work(self._read_json()))
+                params = self._read_json()
+                job = self.server.start_job(
+                    "split",
+                    self.server.split_work(params),
+                    before=lambda: self.server.confirm_split(params),
+                )
                 self._json({"job": job.id})
             elif route == "/api/merge":
                 job = self.server.start_job("merge", self.server.merge_work(self._read_json()))
@@ -779,6 +850,8 @@ class _Handler(BaseHTTPRequestHandler):
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
             else:
                 self._fail(HTTPStatus.NOT_FOUND, "Not found")
+        except ReplaceNeedsConfirmation as exc:
+            self._json({"error": str(exc), "confirm": exc.counts}, HTTPStatus.CONFLICT)
         except RuntimeError as exc:
             self._fail(HTTPStatus.CONFLICT, str(exc))
         except (ValueError, OSError, CouldntDecodeError, CouldntEncodeError) as exc:
@@ -796,6 +869,8 @@ class _Handler(BaseHTTPRequestHandler):
         if length > MAX_UPLOAD_BYTES:
             raise ValueError("File too large")
         name = "manifest.json" if area == "manifest" else safe_name((query.get("name") or [""])[0])
+        with self.server.when_idle("add files"):  # before reading a big body for nothing
+            pass
         dest = ws.path(area, name)
         partial = dest.with_name(dest.name + ".part")
         remaining = length
@@ -809,12 +884,13 @@ class _Handler(BaseHTTPRequestHandler):
                     remaining -= len(block)
             if area == "manifest":
                 load_manifest(str(partial))  # reject anything that is not a seamsplit manifest
-            os.replace(partial, dest)
-            if area in ("input", "manifest"):
-                # These hold a single file. Drop the previous one only now that the new
-                # file is complete (and, for a manifest, valid): a failed or cut-short
-                # upload must leave what the user already had untouched.
-                ws.clear(area, keep=dest)
+            with self.server.when_idle("add files"):  # a job may have started meanwhile
+                os.replace(partial, dest)
+                if area in ("input", "manifest"):
+                    # These hold a single file. Drop the previous one only now that the new
+                    # file is complete (and, for a manifest, valid): a failed or cut-short
+                    # upload must leave what the user already had untouched.
+                    ws.clear(area, keep=dest)
         finally:
             if partial.exists():
                 partial.unlink()

@@ -415,9 +415,50 @@ def test_cli_limit_derives_the_target_from_the_service_limit(tmp_path, capsys):
 
 
 def test_cli_limit_leaves_room_for_the_padding_of_a_lossy_encoder(tmp_path, capsys):
-    out = _dry_run(tmp_path, capsys, "--limit", "59")  # mp3 is the default format
+    out = _dry_run(tmp_path, capsys, "--limit", "59", "--format", "mp3")
     assert "Target chunk length: 51.75s (from --limit 59s" in out
     assert "margin 0.25s" in out
+
+
+def test_cli_default_format_is_lossless_so_limit_reserves_no_margin(tmp_path, capsys):
+    # no --format: flac, which lasts exactly as long as its audio
+    out = _dry_run(tmp_path, capsys, "--limit", "59")
+    assert "Target chunk length: 52s (from --limit 59s" in out
+    assert "margin" not in out.splitlines()[0]
+
+
+def test_cli_split_without_format_writes_flac_chunks(tmp_path, capsys):
+    src = _make_song(tmp_path)
+    chunks = tmp_path / "chunks"
+    rc = main(["split", str(src), "--limit", "30", "--before-slack", "5", "--out", str(chunks)])
+    capsys.readouterr()
+    assert rc == 0
+    assert sorted(p.suffix for p in chunks.iterdir() if p.name != "manifest.json") == [
+        ".flac"
+    ] * len([p for p in chunks.iterdir() if p.name != "manifest.json"])
+    assert list(chunks.glob("*.flac")) and not list(chunks.glob("*.mp3"))
+
+
+def test_cli_format_mp3_is_still_available(tmp_path, capsys):
+    src = _make_song(tmp_path)
+    chunks = tmp_path / "chunks"
+    rc = main(
+        [
+            "split",
+            str(src),
+            "--limit",
+            "30",
+            "--before-slack",
+            "5",
+            "--format",
+            "mp3",
+            "--out",
+            str(chunks),
+        ]
+    )
+    capsys.readouterr()
+    assert rc == 0
+    assert list(chunks.glob("*.mp3")) and not list(chunks.glob("*.flac"))
 
 
 def test_cli_margin_overrides_the_default(tmp_path, capsys):
@@ -672,6 +713,68 @@ def test_cli_split_and_merge_with_flac(tmp_path, capsys):
     ref = np.array(AudioSegment.from_file(str(src)).get_array_of_samples()).astype(float)
     out = np.array(AudioSegment.from_file(str(tmp_path / "merged.flac")).get_array_of_samples())
     assert _snr_db(ref, out.astype(float)) > 60
+
+
+# --- the output keeps the sample rate of the chunks ------------------------------
+
+
+def _split_48k(tmp_path):
+    sr = 48000
+    rng = np.random.default_rng(5)
+    t = np.arange(sr * 26) / sr
+    x = 0.3 * np.sin(2 * np.pi * 300 * t) + 0.05 * rng.standard_normal(len(t))
+    pcm = (x / np.abs(x).max() * 0.8 * 32767).astype(np.int16)
+    src = tmp_path / "song.wav"
+    AudioSegment(pcm.tobytes(), sample_width=2, frame_rate=sr, channels=1).export(
+        str(src), format="wav"
+    )
+    cfg = SplitConfig(
+        target_s=8.0,
+        before_slack_s=2.0,
+        after_slack_s=1.0,
+        overlap_s=1.0,
+        min_final_s=2.0,
+        fade_ms=0,
+        output_dir=str(tmp_path / "chunks"),
+        export_format="wav",
+    )
+    manifest = split_audio(str(src), cfg)
+    assert len(manifest["parts"]) >= 3
+    return tmp_path / "chunks", pcm
+
+
+def test_merge_keeps_the_rate_of_the_chunks_by_default(tmp_path):
+    chunks, pcm = _split_48k(tmp_path)
+
+    merged = merge_audio(str(chunks), str(chunks / "manifest.json"), str(tmp_path / "out.wav"))
+
+    assert merged.frame_rate == 48000
+    written = AudioSegment.from_file(str(tmp_path / "out.wav"))
+    assert written.frame_rate == 48000 and len(written.get_array_of_samples()) == len(pcm)
+
+
+def test_merge_still_resamples_when_a_rate_is_asked_for(tmp_path):
+    chunks, _ = _split_48k(tmp_path)
+
+    merged = merge_audio(
+        str(chunks), str(chunks / "manifest.json"), str(tmp_path / "out.wav"), samplerate=44100
+    )
+
+    assert merged.frame_rate == 44100
+    assert AudioSegment.from_file(str(tmp_path / "out.wav")).frame_rate == 44100
+
+
+def test_cli_merge_without_samplerate_keeps_the_rate(tmp_path, capsys):
+    chunks, _ = _split_48k(tmp_path)
+    out = tmp_path / "cli.wav"
+
+    assert (
+        main(["merge", str(chunks), "--manifest", str(chunks / "manifest.json"), "--out", str(out)])
+        == 0
+    )
+    capsys.readouterr()
+
+    assert AudioSegment.from_file(str(out)).frame_rate == 48000
 
 
 # --- more than 99 chunks --------------------------------------------------------

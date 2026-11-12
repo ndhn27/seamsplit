@@ -58,6 +58,13 @@ def _to_mono(interleaved: np.ndarray, channels: int) -> np.ndarray:
     return interleaved.reshape(-1, channels).mean(axis=1)
 
 
+# Shifts whose correlation is within this of the best count as ties (see estimate_lag).
+# It has to be far below what a few samples of offset cost on bass-heavy material: for a
+# signal whose power sits near 300 Hz at 44.1 kHz, being 2 samples off already loses 0.4%
+# of the correlation, which 0.01 would have forgiven (and chosen lag 0 instead).
+LAG_TIE_TOLERANCE = 1e-4
+
+
 def estimate_lag(a: np.ndarray, b: np.ndarray, max_lag: int) -> Tuple[int, float]:
     """Measure how far ``b`` is offset from ``a``.
 
@@ -65,7 +72,10 @@ def estimate_lag(a: np.ndarray, b: np.ndarray, max_lag: int) -> Tuple[int, float
     ``±max_lag``) is the shift for which ``b[k] ≈ a[k + lag]`` and
     ``correlation`` is the normalized cross-correlation at that shift
     (1.0 = identical shape, ~0 = unrelated). If several shifts score within
-    0.01 of the best (periodic signals), the one closest to 0 wins. ``a`` and ``b`` are compared
+    :data:`LAG_TIE_TOLERANCE` of the best (periodic signals), the one closest to 0 wins.
+    Anything measurably worse than the best does not count as a tie, however close to 0:
+    a broad correlation peak (bass-heavy material, or a lossy encode) is not a reason
+    to settle for the middle of it. ``a`` and ``b`` are compared
     over the part where they overlap at each candidate shift, so a large
     lag doesn't get an unfair advantage or penalty.
 
@@ -101,7 +111,7 @@ def estimate_lag(a: np.ndarray, b: np.ndarray, max_lag: int) -> Tuple[int, float
     # Periodic material (a held note, a pure tone) correlates equally well at
     # every multiple of its period; among near-equal peaks take the smallest
     # shift instead of an arbitrary one.
-    near_best = np.flatnonzero(ncc >= best - 0.01)
+    near_best = np.flatnonzero(ncc >= best - LAG_TIE_TOLERANCE)
     k = int(near_best[np.argmin(absl[near_best])])
     return int(lags[k]), float(ncc[k])
 

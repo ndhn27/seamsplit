@@ -163,6 +163,101 @@ def test_a_job_needs_a_song_to_start_from(tmp_path):
         _run(str(tmp_path / "empty"), str(tmp_path / "missing.wav"))
 
 
+class _Killed(BaseException):
+    """What a kill -9 looks like from the files: the program is simply gone."""
+
+
+@pytest.fixture
+def killed_in_the_split(monkeypatch):
+    """The next split writes some chunks and dies before ``manifest.json``."""
+
+    def dying(input_file, config, **kwargs):
+        os.makedirs(config.output_dir, exist_ok=True)
+        for n in (1, 2, 3, 99):  # 99: a chunk a split with other settings would not make
+            with open(os.path.join(config.output_dir, f"My Song_part{n:02d}.wav"), "wb") as f:
+                f.write(b"half a chunk")
+        raise _Killed
+
+    import seamsplit.job as job_module
+
+    monkeypatch.setattr(job_module, "split_audio", dying)
+    return monkeypatch
+
+
+def test_job_json_is_there_before_the_split_so_a_killed_split_can_be_resumed(
+    tmp_path, song, killed_in_the_split
+):
+    folder = str(tmp_path / "job")
+    with pytest.raises(_Killed):
+        _run(folder, song)
+    chunks = os.path.join(folder, "chunks")
+    assert os.listdir(chunks) and not os.path.exists(os.path.join(chunks, "manifest.json"))
+    job = load_job(folder)  # written before the split started
+    assert job is not None and job.input_file == os.path.abspath(song)
+    assert job.split["target_s"] == 15
+
+    killed_in_the_split.undo()  # the next run is a normal one
+    result, messages = _run(folder, None)  # no need to name the file again
+
+    assert any("interrupted" in m for m in messages)
+    assert result.split_now and not result.status.complete  # waiting for the results, as usual
+    names = sorted(n for n in os.listdir(chunks) if n.endswith(".wav"))
+    with open(os.path.join(chunks, "manifest.json"), encoding="utf-8") as f:
+        assert names == sorted(json.load(f)["parts"])  # the dead chunks (part99) are gone
+    assert not [n for n in os.listdir(chunks) if n.endswith(".tmp")]
+
+    _hand_back(folder, stems=("instrumental",))  # and the rest of the job works
+    assert _run(folder, song, match="instrumental")[0].done
+
+
+def test_a_killed_split_can_be_started_over_with_another_song(tmp_path, song, killed_in_the_split):
+    folder = str(tmp_path / "job")
+    with pytest.raises(_Killed):
+        _run(folder, song)
+    other = tmp_path / "Other.wav"
+    to_segment(make_song(40.0)).export(str(other), format="wav")
+
+    killed_in_the_split.undo()
+    result, _ = _run(folder, str(other))
+
+    assert result.split_now
+    assert load_job(folder).input_file == os.path.abspath(str(other))
+
+
+def test_what_a_killed_split_did_not_make_is_not_deleted(tmp_path, song, killed_in_the_split):
+    folder = str(tmp_path / "job")
+    with pytest.raises(_Killed):
+        _run(folder, song)
+    notes = os.path.join(folder, "chunks", "notes.txt")
+    with open(notes, "w", encoding="utf-8") as f:
+        f.write("mine")
+
+    killed_in_the_split.undo()
+    with pytest.raises(ValueError, match="already holds files"):
+        _run(folder, song)
+    assert os.path.isfile(notes)
+
+
+def test_status_of_a_job_whose_split_was_killed_says_how_to_go_on(
+    tmp_path, song, killed_in_the_split, capsys
+):
+    folder = str(tmp_path / "job")
+    with pytest.raises(_Killed):
+        _run(folder, song)
+    killed_in_the_split.undo()
+
+    assert main(["status", folder]) != 0
+    assert "interrupted" in capsys.readouterr().err
+
+
+def test_a_finished_split_leaves_no_temporary_manifest(tmp_path, song):
+    folder = str(tmp_path / "job")
+    _run(folder, song)
+    assert sorted(n for n in os.listdir(os.path.join(folder, "chunks")) if "manifest" in n) == [
+        "manifest.json"
+    ]
+
+
 def test_a_job_whose_song_was_moved_cannot_be_split_but_can_be_merged(tmp_path, song):
     folder = str(tmp_path / "job")
     _run(folder, song, match="instrumental")
@@ -366,7 +461,7 @@ def test_run_with_a_service_records_it_and_uses_its_limit(tmp_path, song, capsys
     assert "Service xminus: limit 59s." in out
     job = load_job(folder)
     assert job.split["service"] == "xminus" and job.split["limit_s"] == 59.0
-    assert job.split["target_s"] == pytest.approx(51.75)
+    assert job.split["target_s"] == pytest.approx(52.0)  # flac by default: no encoder margin
 
 
 def test_a_local_backend_cuts_long_chunks_in_wav_unless_told_otherwise(

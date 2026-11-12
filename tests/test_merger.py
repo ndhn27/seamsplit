@@ -7,11 +7,9 @@ import numpy as np
 import pytest
 from seamsplit.audio import AudioSegment
 
+from seamsplit.dsp import _adaptive_gains, _equal_power_gains, _linear_gains
 from seamsplit.merger import (
     MergeReport,
-    _adaptive_gains,
-    _equal_power_gains,
-    _linear_gains,
     adaptive_crossfade_merge,
     equal_power_crossfade_merge,
     find_seam,
@@ -24,6 +22,26 @@ from seamsplit.merger import (
     load_manifest,
     merge_audio,
 )
+
+
+def test_samplerate_none_means_keep_the_chunks_rate_and_anything_else_is_checked():
+    from seamsplit.checks import _check_samplerate
+
+    assert _check_samplerate(None) is None
+    assert _check_samplerate(48000) == 48000
+
+
+def test_chunks_at_a_different_rate_are_converted_and_it_is_reported_once():
+    report = MergeReport()
+    segments = [
+        _tone(2000, frame_rate=48000),
+        _tone(2000, frame_rate=44100),
+        _tone(2000, frame_rate=44100),
+    ]
+    merged = linear_crossfade_merge(segments, 500, report=report)
+    assert merged.frame_rate == 48000  # the first chunk's rate wins
+    converted = [w for w in report.warnings if "44100 Hz" in w]
+    assert len(converted) == 1 and "48000 Hz" in converted[0]
 
 
 def _tone(duration_ms, freq=440, frame_rate=44100):
@@ -229,7 +247,6 @@ _NAN, _INF = float("nan"), float("inf")
         ({"samplerate": 44100.5}, "samplerate must be a positive whole number"),
         ({"samplerate": _NAN}, "samplerate must be a positive whole number"),
         ({"samplerate": True}, "samplerate must be a positive whole number"),
-        ({"samplerate": None}, "samplerate must be a positive whole number"),
         ({"max_gain_db": _NAN}, "max_gain_db must be a finite number"),
         ({"max_gain_db": -1}, "max_gain_db must not be negative"),
         ({"seam_fade_ms": 0}, "seam_fade_ms must be positive"),
@@ -330,6 +347,32 @@ def test_estimate_lag_of_unrelated_signals_has_low_correlation():
     rng = np.random.default_rng(6)
     _, corr = estimate_lag(rng.standard_normal(8000), rng.standard_normal(8000), 500)
     assert corr < 0.2
+
+
+def _bass_heavy(seconds, rate=44100):
+    """Most of the power below 400 Hz: the correlation peak is so broad that a few
+    samples of offset cost well under 1% of it."""
+    t = np.arange(int(seconds * rate)) / rate
+    parts = [(55, 1.0, 0.3), (110, 0.8, 1.1), (165, 0.5, 2.0), (220, 0.4, 0.7), (330, 0.3, 1.9)]
+    x = sum(a * np.sin(2 * np.pi * f * t + p) for f, a, p in parts)
+    return x * (0.6 + 0.4 * np.sin(2 * np.pi * 0.5 * t))
+
+
+@pytest.mark.parametrize("lag", [-9, -5, -2, -1, 1, 2, 5, 9])
+def test_estimate_lag_is_not_pulled_to_zero_by_a_broad_correlation_peak(lag):
+    """Shifts within 0.01 of the best must not count as a tie: on bass-heavy material an
+    offset of a few samples (what an MP3 encode adds) is not reported as 0."""
+    x = _bass_heavy(5)
+    n = 4 * 44100
+    # b[k] = a[k + lag]
+    a, b = (x[:n], x[lag : lag + n]) if lag > 0 else (x[-lag : -lag + n], x[:n])
+    zero_ncc = float(np.dot(a, b) / np.sqrt(np.dot(a, a) * np.dot(b, b)))
+    assert zero_ncc > 0.98  # the trap: lag 0 correlates almost as well as the truth
+
+    found, corr = estimate_lag(a, b, max_lag=1000)
+
+    assert found == lag
+    assert corr == pytest.approx(1.0, abs=1e-6)
 
 
 def test_estimate_lag_prefers_zero_for_periodic_signals():

@@ -48,6 +48,20 @@ def test_anchor_fit_recovers_lag_and_gain(lag):
     assert fit.recon_db > 60
 
 
+@pytest.mark.parametrize("lag", [-5, -2, 2, 5])
+def test_anchor_fit_finds_a_small_lag_on_bass_heavy_material(lag):
+    """Regression: the lag was taken from a 0.01-wide tie of correlations, which on bass-heavy
+    material swallows an offset of a few samples, so --anchor reported 0 and left it in."""
+    t = np.arange(SR * 6) / SR
+    parts = [(55, 1.0, 0.3), (110, 0.8, 1.1), (165, 0.5, 2.0), (220, 0.4, 0.7), (330, 0.3, 1.9)]
+    original = sum(a * np.sin(2 * np.pi * f * t + p) for f, a, p in parts)
+    original = original * (0.6 + 0.4 * np.sin(2 * np.pi * 0.5 * t))
+    processed = original[lag:] if lag > 0 else np.concatenate([np.zeros(-lag), original])
+    fit = anchor_fit(original, processed, 600)
+    assert fit.lag == lag  # processed[k] ~ original[k + lag]
+    assert fit.correlation > 0.9999
+
+
 def test_anchor_fit_on_a_window_still_measures_the_whole():
     original = _noise(SR * 30)
     fit = anchor_fit(original, original[200:] * 1.5, 600, window=SR * 5)

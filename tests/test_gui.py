@@ -337,14 +337,149 @@ def test_split_then_merge_through_the_api(gui):
     assert 10 * np.log10(np.mean(a**2) / max(np.mean((a - b) ** 2), 1e-12)) > 60
 
 
-def test_a_new_split_clears_the_previous_job(gui):
+SPLIT = {"limit": "20", "format": "wav", "overlap": "2"}
+
+
+def test_a_new_split_clears_the_previous_job_once_it_is_told_to(gui):
     gui.json("POST", "/api/upload", _song(), area="input", name="song.wav")
     gui.json("POST", "/api/upload", b"x", area="processed", name="old_part01.wav")
-    job = gui.wait(
-        gui.json("POST", "/api/split", {"limit": "20", "format": "wav", "overlap": "2"})[1]["job"]
-    )
+    job = gui.wait(gui.json("POST", "/api/split", {**SPLIT, "replace": True})[1]["job"])
     assert job["state"] == "done", job["error"]
     assert gui.json("GET", "/api/state")[1]["processed"] == []
+
+
+def test_a_split_over_the_users_files_asks_first_and_deletes_nothing_until_told(gui):
+    gui.json("POST", "/api/upload", _song(), area="input", name="song.wav")
+    gui.json("POST", "/api/upload", b"x", area="processed", name="old_part01.wav")
+    ws = gui.server.workspace
+    (ws.path("merged") / "old_merged.wav").write_bytes(b"m")
+    (ws.path("audition") / "choices.json").write_bytes(b"{}")
+
+    status, body = gui.json("POST", "/api/split", SPLIT)
+
+    assert status == 409
+    assert body["confirm"] == {"processed": 1, "merged": 1, "audition": 1}
+    assert "replace" in body["error"] and "processed" in body["error"]
+    state = gui.json("GET", "/api/state")[1]
+    assert [f["name"] for f in state["processed"]] == ["old_part01.wav"]
+    assert [f["name"] for f in state["merged"]] == ["old_merged.wav"]
+    assert (ws.path("audition") / "choices.json").is_file()
+    assert not any(j.state == "running" for j in gui.server.jobs.values())  # no job was made
+
+    status, started = gui.json("POST", "/api/split", {**SPLIT, "replace": "true"})
+    assert status == 200
+    assert gui.wait(started["job"])["state"] == "done"
+    state = gui.json("GET", "/api/state")[1]
+    assert state["processed"] == [] and state["merged"] == []
+    assert not (ws.path("audition") / "choices.json").exists()
+
+
+def test_splitting_again_over_only_chunks_needs_no_confirmation(gui):
+    gui.json("POST", "/api/upload", _song(), area="input", name="song.wav")
+    for _ in range(2):  # the second one replaces the chunks of the first: that is the point
+        status, started = gui.json("POST", "/api/split", SPLIT)
+        assert status == 200
+        assert gui.wait(started["job"])["state"] == "done"
+
+
+def _wait_idle(gui, timeout=10):
+    deadline = time.time() + timeout
+    while gui.json("GET", "/api/state")[1]["busy"]:
+        assert time.time() < deadline, "the job never ended"
+        time.sleep(0.05)
+
+
+def test_nothing_is_cleared_or_replaced_while_a_job_runs(gui):
+    gui.json("POST", "/api/upload", _song(), area="input", name="song.wav")
+    gui.json("POST", "/api/upload", b"x", area="processed", name="a_part01.wav")
+    blocker = threading.Event()
+    gui.server.start_job("merge", lambda job: blocker.wait(10))
+    try:
+        status, body = gui.json("POST", "/api/clear", area="processed")
+        assert status == 409 and "running" in body["error"]
+        assert (
+            gui.json("POST", "/api/upload", b"y", area="processed", name="b_part02.wav")[0] == 409
+        )
+        assert gui.json("POST", "/api/upload", b"z", area="input", name="other.wav")[0] == 409
+        assert gui.json("POST", "/api/audition-choice", {"seam": 1, "choice": "a"})[0] == 409
+
+        state = gui.json("GET", "/api/state")[1]
+        assert [f["name"] for f in state["processed"]] == ["a_part01.wav"]
+        assert [f["name"] for f in state["input"]] == ["song.wav"]
+    finally:
+        blocker.set()
+
+    _wait_idle(gui)  # and once it has ended, the same calls work
+    assert gui.json("POST", "/api/clear", area="processed")[0] == 200
+    assert gui.json("GET", "/api/state")[1]["processed"] == []
+
+
+def test_clearing_in_the_middle_of_a_merge_cannot_kill_it(gui, monkeypatch):
+    gui.json("POST", "/api/upload", _song(), area="input", name="song.wav")
+    gui.wait(gui.json("POST", "/api/split", SPLIT)[1]["job"])
+    parts = gui.json("GET", "/api/state")[1]["split"]["parts"]
+    for name in parts:
+        chunk = gui.call("GET", f"/download/chunks/{name}")[1]
+        gui.json("POST", "/api/upload", chunk, area="processed", name=name)
+
+    inside, go = threading.Event(), threading.Event()
+    real_merge = gui_module.merge_audio
+
+    def merge_when_told(*args, **kwargs):
+        inside.set()  # the merge is under way, its files are in use
+        assert go.wait(10)
+        return real_merge(*args, **kwargs)
+
+    monkeypatch.setattr(gui_module, "merge_audio", merge_when_told)
+    started = gui.json("POST", "/api/merge", {"format": "wav"})[1]
+    assert inside.wait(10)
+    try:
+        for area in ("processed", "merged", "input", "manifest"):
+            assert gui.json("POST", "/api/clear", area=area)[0] == 409
+    finally:
+        go.set()
+
+    job = gui.wait(started["job"])
+    assert job["state"] == "done", job["error"]  # no FileNotFoundError
+    assert len(gui.json("GET", "/api/state")[1]["processed"]) == len(parts)
+
+
+def test_merge_without_a_sample_rate_keeps_the_rate_of_the_chunks(gui):
+    gui.json("POST", "/api/upload", _song(), area="input", name="song.wav")
+    gui.wait(gui.json("POST", "/api/split", SPLIT)[1]["job"])
+    for name in gui.json("GET", "/api/state")[1]["split"]["parts"]:
+        chunk = gui.call("GET", f"/download/chunks/{name}")[1]
+        gui.json("POST", "/api/upload", chunk, area="processed", name=name)
+
+    for blank in ({}, {"samplerate": ""}):
+        job = gui.wait(gui.json("POST", "/api/merge", {"format": "wav", **blank})[1]["job"])
+        assert job["state"] == "done", job["error"]
+        raw = gui.call("GET", "/download/merged/song_merged.wav")[1]
+        assert AudioSegment.from_file(io.BytesIO(raw)).frame_rate == SR  # not 44100
+
+    job = gui.wait(
+        gui.json("POST", "/api/merge", {"format": "wav", "samplerate": "11025"})[1]["job"]
+    )
+    raw = gui.call("GET", "/download/merged/song_merged.wav")[1]
+    assert job["state"] == "done" and AudioSegment.from_file(io.BytesIO(raw)).frame_rate == 11025
+
+
+def test_the_page_does_not_offer_equalpower_but_the_api_still_takes_it(gui):
+    info = gui.json("GET", "/api/info")[1]
+    assert info["methods"] == ["adaptive", "linear"] and info["default_method"] == "adaptive"
+
+    gui.json("POST", "/api/upload", _song(), area="input", name="song.wav")
+    gui.wait(gui.json("POST", "/api/split", SPLIT)[1]["job"])
+    for name in gui.json("GET", "/api/state")[1]["split"]["parts"]:
+        chunk = gui.call("GET", f"/download/chunks/{name}")[1]
+        gui.json("POST", "/api/upload", chunk, area="processed", name=name)
+
+    status, body = gui.json("POST", "/api/merge", {"format": "wav", "method": "bogus"})
+    assert status == 400 and "method must be one of" in body["error"]
+    status, started = gui.json("POST", "/api/merge", {"format": "wav", "method": "equalpower"})
+    assert status == 200
+    job = gui.wait(started["job"])
+    assert job["state"] == "done", job["error"]
 
 
 def test_errors_reach_the_page_as_messages(gui):
@@ -389,6 +524,12 @@ def test_build_split_config_derives_the_target_like_the_cli(tmp_path):
     assert limit == 59 and config.target_s == pytest.approx(59 - 3 - 4 - 0.25)
     config, _ = build_split_config({"limit": "59", "format": "FLAC"}, str(tmp_path))
     assert config.export_format == "flac" and config.target_s == pytest.approx(52)
+
+
+def test_build_split_config_defaults_to_lossless_flac(tmp_path):
+    for params in ({"limit": "59"}, {"limit": "59", "format": ""}):
+        config, _ = build_split_config(params, str(tmp_path))
+        assert config.export_format == "flac" and config.target_s == pytest.approx(52)
 
 
 def test_build_split_config_keeps_a_short_limit_valid(tmp_path):

@@ -1,0 +1,13 @@
+# Keeps the pinned versions current: the actions in .github/workflows (pinned to a commit, with
+# the version in a comment) and the build tool in packaging/requirements-build.txt. Each update
+# arrives as a pull request, so CI runs on it before it is merged.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /packaging
+    schedule:
+      interval: monthly

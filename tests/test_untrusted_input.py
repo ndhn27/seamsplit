@@ -35,7 +35,11 @@ def test_a_manifest_naming_a_part_with_a_drive_is_refused_on_windows(tmp_path, m
         patched.setattr(os, "name", "nt")
         with pytest.raises(ValueError, match=r"parts\[1\]' must not begin with a drive"):
             load_manifest(path)
-    assert load_manifest(path)["parts"][1] == name  # a plain file name where it is one
+    # a plain file name where it is one: said for a system that is not Windows, because on
+    # Windows (where this test also runs) it is not one
+    with monkeypatch.context() as patched:
+        patched.setattr(os, "name", "posix")
+        assert load_manifest(path)["parts"][1] == name
 
 
 @pytest.mark.parametrize("name", ["NUL.wav", "con", "COM1.flac", "lpt9", 'a"b.wav', "x<y.wav"])
@@ -49,10 +53,14 @@ def test_a_manifest_naming_a_part_that_windows_cannot_have_is_refused_there(
             load_manifest(path)
 
 
-def test_a_song_whose_name_has_a_colon_still_splits_and_merges_where_that_is_a_name(tmp_path):
+def test_a_song_whose_name_has_a_colon_still_splits_and_merges_where_that_is_a_name(
+    tmp_path, monkeypatch
+):
     """ "Artist: Title_part01.wav" is a fine file name on Linux and macOS."""
     path = _manifest(tmp_path, "Artist: Title_part01.wav", "Artist: Title_part02.wav")
-    assert load_manifest(path)["parts"][0] == "Artist: Title_part01.wav"
+    with monkeypatch.context() as patched:
+        patched.setattr(os, "name", "posix")  # "where that is a name": not on a Windows host
+        assert load_manifest(path)["parts"][0] == "Artist: Title_part01.wav"
     assert file_name_problem("Artist: Title_part01.wav", windows=False) is None
     assert file_name_problem("Artist: Title_part01.wav", windows=True)  # not on Windows
 

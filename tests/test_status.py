@@ -8,6 +8,7 @@ import shutil
 import numpy as np
 import pytest
 from seamsplit.audio import AudioSegment
+from seamsplit.checks import file_name_problem
 
 from fake_service import SR, to_segment
 from seamsplit.status import (
@@ -206,7 +207,24 @@ SPECIAL = [
 ]
 
 
-@pytest.mark.parametrize("name", SPECIAL)
+def _can_be_a_folder_name_here(name):
+    """``*`` and ``?`` are glob characters, but on Windows they cannot be in a name at all."""
+    return os.name != "nt" or file_name_problem(name.replace("/", "_")) is None
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        pytest.param(
+            name,
+            marks=pytest.mark.skipif(
+                not _can_be_a_folder_name_here(name),
+                reason="Windows does not allow this character in a folder name",
+            ),
+        )
+        for name in SPECIAL
+    ],
+)
 def test_a_results_folder_with_special_characters_in_its_name_is_read(service, tmp_path, name):
     from seamsplit.matching import _list_files
 

@@ -5,8 +5,43 @@ in the signal processing."""
 from __future__ import annotations
 
 import math
+import ntpath
 import numbers
+import os
+import re
 from typing import Any, Optional
+
+# What Windows does with a file name, which a name that is looked up in a folder has to
+# survive (the GUI makes a name of whatever it is sent; a manifest's names are only checked).
+BAD_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"|?*]')
+# Windows opens these as devices, whatever comes after the first dot: ``NUL.wav`` is ``NUL``
+DEVICE_NAMES = frozenset(
+    {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"}
+    | {f"{device}{digit}" for device in ("COM", "LPT") for digit in "0123456789\u00b9\u00b2\u00b3"}
+)
+
+
+def file_name_problem(name: str, windows: Optional[bool] = None) -> Optional[str]:
+    """Why ``name``, a file name that is joined to a folder's, would not stay in it or would
+    not be a file on Windows (``None`` if it is fine, and always on other systems, where the
+    only special characters in a name are ``/`` and the null character). ``ntpath.join(
+    r"C:\\work", "D:evil.flac")`` is ``D:evil.flac``: a name with a drive in it leaves the
+    folder, and ``NUL.wav`` is the NUL device. ``windows`` says which system to check for (by
+    default the one the program runs on): a manifest can be moved to another system, but a
+    name such as ``Song: Remix_part01.wav`` is a good name where the song was split on
+    Linux or macOS."""
+    if windows is None:
+        windows = os.name == "nt"
+    if not windows:
+        return None
+    if ntpath.splitdrive(name)[0]:
+        return f"must not begin with a drive, which takes it out of its folder, got {name!r}"
+    if BAD_NAME_CHARS.search(name):
+        return f"has a character that Windows does not allow in a file name, got {name!r}"
+    if name.split(".", 1)[0].rstrip(" ").upper() in DEVICE_NAMES:
+        return f"is the name of a Windows device ({name.split('.', 1)[0].upper()}), not of a file"
+    return None
+
 
 _JSON_TYPE_NAMES = (
     (bool, "boolean"),  # before int: bool is a subclass of it

@@ -34,9 +34,11 @@ AUDIO_EXTENSIONS = frozenset(
 
 
 def _list_files(processed_dir: str) -> List[str]:
+    # The folder is a path, not a pattern: "song [live]" would otherwise be a class of
+    # characters (and "a*b" a wildcard) and match nothing.
     return sorted(
         path
-        for path in glob.glob(os.path.join(processed_dir, "**", "*"), recursive=True)
+        for path in glob.glob(os.path.join(glob.escape(processed_dir), "**", "*"), recursive=True)
         if os.path.isfile(path)
     )
 

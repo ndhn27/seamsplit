@@ -190,3 +190,46 @@ def test_a_long_list_of_pending_chunks_is_cut_short(tmp_path):
     listed = ", ".join(str(i) for i in range(1, 21))
     assert f"chunk(s) {listed} and {n - 20} more." in text
     assert f"0 of {n} chunk(s) are complete." in text
+
+
+# -- a folder whose name has characters a glob pattern gives a meaning to ---------------
+
+SPECIAL = [
+    "song [live]",
+    "a*b",
+    "x?y",
+    "[abc]",
+    "[!x]",
+    "{a,b}",
+    "100% (demo) #1",
+    "dir [1]/sub [2]",
+]
+
+
+@pytest.mark.parametrize("name", SPECIAL)
+def test_a_results_folder_with_special_characters_in_its_name_is_read(service, tmp_path, name):
+    from seamsplit.matching import _list_files
+
+    processed = _copy_results(service, tmp_path, name)
+    names = [os.path.basename(p) for p in _list_files(processed)]
+    assert names == [os.path.basename(p) for p in _list_files(service.processed_dir)] and names
+    status = _status(service, processed)
+    assert status.complete and all(s.state == DONE and s.how == "name" for s in status.slots)
+
+
+def test_a_folder_inside_the_results_with_special_characters_is_searched_too(service, tmp_path):
+    processed = tmp_path / "processed"
+    shutil.copytree(service.processed_dir, processed / "batch [live]")
+    assert _status(service, str(processed)).complete
+
+
+def test_special_characters_in_the_folder_do_not_change_what_is_listed(tmp_path):
+    from seamsplit.matching import _list_files
+
+    for name in ("[a]", "plain"):
+        folder = tmp_path / name
+        (folder / "deep").mkdir(parents=True)
+        for rel in ("one.wav", "deep/two.wav", ".hidden.wav"):
+            (folder / rel).write_bytes(b"x")
+        listed = [os.path.relpath(p, folder) for p in _list_files(str(folder))]
+        assert listed == [os.path.join("deep", "two.wav"), "one.wav"]  # hidden files stay hidden

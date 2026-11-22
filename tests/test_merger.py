@@ -1523,3 +1523,26 @@ def test_an_exception_from_progress_stops_the_merge_before_anything_is_written(t
         merge_audio(processed, manifest, str(out), progress=progress)
     assert reads == [1, 2]  # chunk 3 was never read
     assert not out.exists()
+
+
+def test_merge_from_a_folder_with_special_characters_in_its_name(service, tmp_path):
+    """``song [live]/processed`` was read as a pattern: no file was found for any part."""
+    import shutil
+
+    plain = merge_audio(
+        service.processed_dir,
+        service.manifest_path,
+        str(tmp_path / "plain.wav"),
+        match="instrumental",
+        pairing="off",
+    )
+    processed = tmp_path / "song [live]" / "processed"
+    shutil.copytree(service.processed_dir, processed)
+    merged = merge_audio(
+        str(processed),
+        service.manifest_path,
+        str(tmp_path / "merged.wav"),
+        match="instrumental",
+        pairing="off",
+    )
+    assert len(merged) == len(plain) and merged.raw_data == plain.raw_data

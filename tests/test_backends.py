@@ -2,8 +2,10 @@
 the presets, the backend of one's own, and what happens to what the program writes. The
 programs are stand-ins (``fake_programs``), so what is tested is SeamSplit's side of it."""
 
+import json
 import os
 import shutil
+import subprocess
 
 import pytest
 
@@ -12,14 +14,19 @@ from seamsplit.backends import (
     Backend,
     BackendError,
     BackendUnavailable,
+    CustomBackendNotStored,
     backend_from_dict,
     backend_from_options,
+    backend_stem_names,
     backend_to_dict,
     check_available,
     classify,
     custom_backend,
+    fingerprint,
     preset_backend,
     separate_chunk,
+    split_command,
+    upgrade_legacy_backend,
 )
 
 
@@ -89,11 +96,242 @@ def test_the_options_of_the_command_line_make_at_most_one_backend():
             backend_from_options(*args)
 
 
-def test_a_backend_survives_being_written_to_a_job_file():
-    for backend in (preset_backend("demucs", "m"), custom_backend("t {input} {output}", ["a=b"])):
+# -- the command line is read as the system reads one ---------------------------------
+
+
+@pytest.mark.parametrize(
+    "command, expected",
+    [
+        (
+            r"C:\Tools\demucs\demucs.exe {input} {output}",
+            [r"C:\Tools\demucs\demucs.exe", "{input}", "{output}"],
+        ),
+        (
+            r'"C:\Program Files\Demucs\demucs.exe" -o "{output}" {input}',
+            [r"C:\Program Files\Demucs\demucs.exe", "-o", "{output}", "{input}"],
+        ),
+        (r'tool.exe "C:\out dir\\" x', ["tool.exe", "C:\\out dir\\", "x"]),  # \\" is \ and the end
+        ("tool\t  a   b ", ["tool", "a", "b"]),
+        ("'not quotes' here", ["'not", "quotes'", "here"]),  # single quotes mean nothing
+        ('a "" b', ["a", "", "b"]),  # an empty argument
+        ('"a ""quoted"" b"', ['a "quoted" b']),
+        # the examples Microsoft gives of how a command line is parsed
+        ('"abc" d e', ["abc", "d", "e"]),
+        (r"a\\\b d" + '"e f"g h', [r"a\\\b", "de fg", "h"]),
+        (r"a\\\"b c d", [r"a\"b", "c", "d"]),
+        (r'a\\"b c" d e', [r"a\b c", "d", "e"]),
+        ("", []),
+    ],
+)
+def test_a_windows_command_line_keeps_its_backslashes(command, expected):
+    assert split_command(command, windows=True) == expected
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        [r"C:\Program Files\tool.exe", r"C:\out dir\x.wav", "--flag=a b"],
+        ["plain", "", 'with "quotes"', "trailing\\", "two\\\\", 'q\\"x', "tab\there"],
+        [r"\\server\share\my song.wav", "a" * 3 + "\\" * 5 + '"'],
+    ],
+)
+def test_what_subprocess_would_write_is_read_back_as_the_same_arguments(arguments):
+    """The command the backend runs is a list, which Windows is given as one line made by
+    ``list2cmdline``: reading a line the way Windows does must undo that."""
+    assert split_command(subprocess.list2cmdline(arguments), windows=True) == arguments
+
+
+def test_an_unclosed_quote_is_an_error_on_both_systems():
+    for windows in (True, False):
+        with pytest.raises(ValueError, match="No closing quotation"):
+            split_command('tool "unclosed {input}', windows=windows)
+
+
+def test_on_other_systems_a_command_line_is_read_as_a_posix_shell_reads_it():
+    command = r"""mytool --in {input} 'a b' "c d" e\ f"""
+    assert split_command(command, windows=False) == [
+        "mytool", "--in", "{input}", "a b", "c d", "e f",
+    ]  # fmt: skip
+    assert split_command(r"C:\Tools\demucs.exe", windows=False) == ["C:Toolsdemucs.exe"]
+
+
+def test_the_system_the_program_runs_on_decides_how_a_command_line_is_read(monkeypatch):
+    command = r'"C:\Program Files\Demucs\demucs.exe" -o {output} {input}'
+    with monkeypatch.context() as patched:
+        patched.setattr(os, "name", "nt")
+        windows = split_command(command)
+        backend = custom_backend(command, ["vocals=^v"])
+    assert windows == [r"C:\Program Files\Demucs\demucs.exe", "-o", "{output}", "{input}"]
+    assert backend.command == tuple(windows) and backend.program == windows[0]
+    unquoted = r"C:\Tools\demucs\demucs.exe -o {output} {input}"
+    with monkeypatch.context() as patched:
+        patched.setattr(os, "name", "posix")
+        assert split_command(unquoted)[0] == "C:Toolsdemucsdemucs.exe"  # a shell eats them
+    with monkeypatch.context() as patched:
+        patched.setattr(os, "name", "nt")
+        assert split_command(unquoted)[0] == r"C:\Tools\demucs\demucs.exe"
+
+
+# -- what a job file records of a backend: never a command ----------------------
+
+
+def test_a_preset_survives_being_written_to_a_job_file():
+    for backend in (
+        preset_backend("demucs"),
+        preset_backend("demucs", "m"),
+        preset_backend("uvr"),
+        preset_backend("audio-separator", "UVR-MDX-NET-Voc_FT.onnx"),
+    ):
         assert backend_from_dict(backend_to_dict(backend)) == backend
+    assert backend_to_dict(preset_backend("demucs", "m")) == {"name": "demucs", "model": "m"}
+    assert backend_to_dict(preset_backend("uvr")) == {"name": "audio-separator", "model": None}
+
+
+def test_a_backend_of_ones_own_is_recorded_as_a_hash_and_cannot_be_read_back():
+    command = "mytool --token hunter2 {input} {output}"
+    backend = custom_backend(command, ["vocals=^v", "rest=^r"])
+    data = backend_to_dict(backend)
+    assert data == {
+        "name": "custom",
+        "stems": ["vocals", "rest"],
+        "fingerprint": fingerprint(backend),
+    }
+    assert "mytool" not in json.dumps(data) and "hunter2" not in json.dumps(data)
+    assert backend_stem_names(data) == ["vocals", "rest"]
+    with pytest.raises(CustomBackendNotStored, match="--backend-cmd"):
+        backend_from_dict(data)
+    # the hash follows the command and the patterns, and nothing else
+    assert fingerprint(custom_backend(command, ["vocals=^v", "rest=^r"])) == fingerprint(backend)
+    assert fingerprint(custom_backend(command + " -x", ["vocals=^v", "rest=^r"])) != fingerprint(
+        backend
+    )
+    assert fingerprint(custom_backend(command, ["vocals=^v", "rest=^x"])) != fingerprint(backend)
+
+
+def test_a_job_file_cannot_say_what_a_preset_is_to_run():
+    hostile = {
+        "name": "demucs",
+        "model": None,
+        "command": ["sh", "-c", "id > PWNED.txt"],
+        "stems": [["vocals", "x"]],
+        "install_hint": "run this",
+    }
+    assert backend_from_dict(hostile) == preset_backend("demucs")
+    assert backend_stem_names(hostile) == ["vocals", "instrumental"]
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        "htdemucs_ft",
+        "UVR-MDX-NET-Voc_FT.onnx",
+        "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
+        "UVR (v2).onnx",
+    ],
+)
+def test_the_names_of_real_models_are_read_back(model):
+    assert backend_from_dict({"name": "audio-separator", "model": model}).model == model
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        "--output_dir",
+        "-n",
+        "../evil.ckpt",
+        "/etc/passwd",
+        "a\\b",
+        "x\ny",
+        " lead",
+        "",
+        "a" * 201,
+        5,
+        ["m"],
+    ],
+)
+def test_a_model_that_is_not_a_name_is_not_passed_on(model):
+    with pytest.raises(ValueError, match="not a model name"):
+        backend_from_dict({"name": "demucs", "model": model})
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        None,
+        "demucs",
+        [],
+        {},
+        {"name": "rm"},
+        {"name": ["demucs"]},
+        {"name": "uvr2"},
+        {"command": ["demucs"], "stems": []},
+    ],
+)
+def test_a_backend_that_is_none_of_the_presets_is_refused(data):
     with pytest.raises(ValueError, match="not valid"):
-        backend_from_dict({"command": [], "stems": []})
+        backend_from_dict(data)
+    with pytest.raises(ValueError, match="not valid"):
+        backend_stem_names(data)
+
+
+@pytest.mark.parametrize("stems", [None, [], "vocals", ["a/b"], ["../x"], ["A"], ["a", "a"], [1]])
+def test_the_stems_of_a_job_file_are_names_or_nothing(stems):
+    with pytest.raises(ValueError, match="stems of the backend"):
+        backend_stem_names({"name": "custom", "stems": stems, "fingerprint": "x"})
+
+
+def _written_by_1_1_1(backend):
+    """What a job file made before the command stopped being recorded held."""
+    return {
+        "name": backend.name,
+        "command": list(backend.command),
+        "stems": [list(item) for item in backend.stems],
+        "install_hint": backend.install_hint,
+    }
+
+
+def test_a_job_file_of_an_older_version_keeps_working_for_a_preset():
+    for backend in (preset_backend("demucs", "m"), preset_backend("uvr"), preset_backend("demucs")):
+        assert upgrade_legacy_backend(_written_by_1_1_1(backend)) == backend_to_dict(backend)
+
+
+def test_an_older_job_file_whose_command_is_not_the_presets_is_not_run():
+    edited = _written_by_1_1_1(preset_backend("demucs"))
+    edited["command"] = ["sh", "-c", "id > PWNED.txt"]
+    upgraded = upgrade_legacy_backend(edited)
+    assert upgraded["name"] == "custom" and upgraded["stems"] == ["vocals", "instrumental"]
+    with pytest.raises(CustomBackendNotStored):
+        backend_from_dict(upgraded)
+    # a changed stem pattern is a changed backend too
+    other = _written_by_1_1_1(preset_backend("demucs"))
+    other["stems"][0][1] = "."
+    assert upgrade_legacy_backend(other)["name"] == "custom"
+    # and the command a user gave once is recognised when it is given again
+    own = custom_backend("t {input} {output}", ["a=b"])
+    assert upgrade_legacy_backend(_written_by_1_1_1(own)) == backend_to_dict(own)
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        None,
+        {},
+        {"command": [], "stems": []},
+        {"command": "sh", "stems": []},
+        {"command": ["sh", 1], "stems": []},
+        {"command": ["sh"], "stems": "ab"},
+        {"command": ["sh"], "stems": [["a"]]},
+        {"command": ["sh"], "stems": [["a", 1]]},
+    ],
+)
+def test_an_older_job_file_that_is_not_a_backend_is_refused(data):
+    with pytest.raises(ValueError, match="not valid"):
+        upgrade_legacy_backend(data)
+
+
+def test_an_older_job_file_with_a_stem_that_is_not_a_name_is_refused():
+    with pytest.raises(ValueError, match="stems of the backend"):
+        upgrade_legacy_backend({"name": "x", "command": ["t"], "stems": [["../a", "b"]]})
 
 
 def test_a_program_that_is_not_installed_says_how_to_get_it(monkeypatch):

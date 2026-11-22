@@ -26,10 +26,29 @@ details.
   `127.0.0.1`, and a request is refused unless it carries the random token from the printed
   address and its `Host` (and its `Origin`, when it sends one) names this server. A way
   around any of these, or a way to read or write a file outside the work folder through an
-  upload name or a download path, is a vulnerability.
-- **Reading untrusted input.** A crafted `manifest.json` or audio file that makes SeamSplit
-  hang, exhaust memory, write outside the folder it was given, or run something it was not
-  asked to run.
+  upload name or a download path, is a vulnerability, and so is a request that keeps a
+  thread of the server for as long as the client likes (a body length that is not a number
+  of bytes is refused, and a client that stops sending or reading is dropped after two
+  minutes).
+- **Reading untrusted input.** A crafted `manifest.json`, `job.json` or audio file that makes
+  SeamSplit hang, exhaust memory, write outside the folder it was given, read a file it was
+  not given, or run something it was not asked to run. The names of the parts in a manifest are
+  joined to a folder, so on Windows one with a drive (`D:evil.flac`, which replaces the folder
+  it is joined to) or the name of a device (`NUL.wav`) is refused. A file that says it is audio
+  is not trusted to be only that: one that lists other files or addresses (an ffconcat or HLS
+  playlist, which FFmpeg detects by looking inside, whatever the file is called) is refused,
+  and no input opens a network protocol. A job folder is made to be carried to another computer and picked up
+  there, so opening one (`status`, `run --job`) must never run a command that is written in it:
+  `job.json` records a preset's name and model, and for a command of your own only a hash (see
+  [Job folders from someone else](docs/jobs-and-backends.md#job-folders-from-someone-else)).
+  Audio is held in memory in full, and a few kilobytes of FLAC silence decode to gigabytes,
+  so a file is read only up to a limit (`--max-input-duration`, two hours by default), checked
+  against its header before it is decoded and again while it is: a file that gets past that,
+  or that makes the memory grow with something other than its length, is a vulnerability. A
+  file inside the limit still takes memory in proportion to its length (up to about 1.3 GB
+  for two hours of stereo at 44.1 kHz, 2.8 GB for the heaviest ordinary format, and a split
+  needs about 1.4 times that); on a small computer, lower the limit. See
+  [Long files and memory](docs/splitting.md#long-files-and-memory).
 
 ## What is not
 
@@ -39,4 +58,5 @@ details.
   version can be required.
 - What the separator programs you choose with `--backend` (`demucs`, `audio-separator`) do:
   SeamSplit runs them as they are installed on your computer.
-- Attacks that need access to your user account or to the work folder to begin with.
+- Attacks that need access to your user account, or to a work folder of your own, to begin
+  with. A job folder or a manifest that someone else made and you open is in scope, above.

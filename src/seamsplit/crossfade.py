@@ -54,6 +54,7 @@ between (``gain_out**2 + gain_in**2 + 2*rho*gain_out*gain_in == 1``).
 
 from __future__ import annotations
 
+import io
 import math
 from dataclasses import dataclass, field
 from typing import Iterable, List, NamedTuple, Optional
@@ -170,7 +171,9 @@ class _Settled:
         self._keep = keep
         self._lo = float(np.iinfo(dtype).min)
         self._hi = float(np.iinfo(dtype).max)
-        self._parts: List[bytes] = []
+        # the final audio goes into one BytesIO as it is settled, and ``take`` hands its buffer
+        # over without a copy: a list of parts that is joined holds the whole result twice
+        self._buffer = io.BytesIO()
         self.frames = 0
         self.clipped = 0
 
@@ -186,14 +189,14 @@ class _Settled:
             )
             np.rint(final, out=final)
             np.clip(final, self._lo, self._hi, out=final)
-            self._parts.append(final.astype(self._dtype).tobytes())
+            self._buffer.write(final.astype(self._dtype))
             self.frames += cut // self._channels
             block = block[cut:].copy()
         return block
 
     def take(self) -> bytes:
-        data = b"".join(self._parts)
-        self._parts.clear()
+        data = self._buffer.getvalue()
+        self._buffer = io.BytesIO()
         return data
 
 

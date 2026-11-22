@@ -37,7 +37,7 @@ from dataclasses import dataclass
 from typing import Callable, List, Optional, Sequence
 
 import numpy as np
-from .audio import AudioSegment, CouldntDecodeError
+from .audio import DEFAULT_MAX_DURATION_S, AudioSegment, CouldntDecodeError
 
 from .report import MergeReport, _emit, _note
 
@@ -80,11 +80,12 @@ def _whiten(x: np.ndarray) -> np.ndarray:
     return flat
 
 
-def signature(path: str) -> np.ndarray:
+def signature(path: str, max_input_s: Optional[float] = DEFAULT_MAX_DURATION_S) -> np.ndarray:
     """The audio of ``path`` as the comparison sees it (see the module docstring); an
-    empty array for a file that holds no audio. Raises ``CouldntDecodeError`` or
-    ``OSError`` for one that cannot be read."""
-    segment = AudioSegment.from_file(path)
+    empty array for a file that holds no audio. Raises ``CouldntDecodeError`` (an
+    ``AudioTooLongError``, for a file longer than ``max_input_s`` seconds) or ``OSError``
+    for one that cannot be read."""
+    segment = AudioSegment.from_file(path, max_duration_s=max_input_s)
     if segment.frame_count() < 2 or segment.sample_width == 0:
         return np.zeros(0)
     mono = segment.frames.astype(np.float64).mean(axis=1)
@@ -140,6 +141,7 @@ def _load(
     progress: Optional[Callable[[int, int, str], None]],
     offset: int,
     total: int,
+    max_input_s: Optional[float] = DEFAULT_MAX_DURATION_S,
 ) -> "tuple[List[np.ndarray], List[Optional[str]]]":
     signatures: List[np.ndarray] = []
     errors: List[Optional[str]] = []
@@ -147,7 +149,7 @@ def _load(
         if progress is not None:
             progress(offset + i + 1, total, os.path.basename(path))
         try:
-            signatures.append(signature(path))
+            signatures.append(signature(path, max_input_s))
             errors.append(None)
         except (OSError, CouldntDecodeError) as exc:
             signatures.append(np.zeros(0))
@@ -160,16 +162,17 @@ def compare(
     originals: Sequence[str],
     max_lag_ms: float = DEFAULT_PAIR_LAG_MS,
     progress: Optional[Callable[[int, int, str], None]] = None,
+    max_input_s: Optional[float] = DEFAULT_MAX_DURATION_S,
 ) -> "tuple[np.ndarray, List[Optional[str]]]":
     """The score matrix of ``candidates`` against ``originals`` (files), and for every
     candidate the reason it could not be read (``None`` if it could). An original that
     cannot be read is an error: nothing can be said about a file without it."""
     total = len(candidates) + len(originals)
-    orig_sigs, orig_errors = _load(originals, progress, 0, total)
+    orig_sigs, orig_errors = _load(originals, progress, 0, total, max_input_s)
     for path, error in zip(originals, orig_errors):
         if error is not None:
             raise OSError(f"could not read the original chunk '{path}': {error}")
-    cand_sigs, cand_errors = _load(candidates, progress, len(originals), total)
+    cand_sigs, cand_errors = _load(candidates, progress, len(originals), total, max_input_s)
     return score_matrix(cand_sigs, orig_sigs, max_lag_ms), cand_errors
 
 
@@ -193,11 +196,12 @@ def identify(
     originals: Sequence[str],
     max_lag_ms: float = DEFAULT_PAIR_LAG_MS,
     progress: Optional[Callable[[int, int, str], None]] = None,
+    max_input_s: Optional[float] = DEFAULT_MAX_DURATION_S,
 ) -> List[Match]:
     """For every file of ``candidates``, the part (index into ``originals``) it is most
     like. Several files may name the same part (both stems of a chunk, a duplicate);
     that is for the caller to make sense of."""
-    scores, errors = compare(candidates, originals, max_lag_ms, progress)
+    scores, errors = compare(candidates, originals, max_lag_ms, progress, max_input_s)
     return matches_from(candidates, scores, errors)
 
 
@@ -252,6 +256,7 @@ def check_pairing(
     what: str = "",
     max_lag_ms: float = DEFAULT_PAIR_LAG_MS,
     progress: Optional[Callable[[int, int, str], None]] = None,
+    max_input_s: Optional[float] = DEFAULT_MAX_DURATION_S,
 ) -> List[str]:
     """Check ``paths`` (``paths[k]`` was paired with part ``k``, ``names[k]``) against the
     original chunks ``originals`` and return them in the right order.
@@ -262,7 +267,7 @@ def check_pairing(
     are the same part, so another has none): merging them would produce nonsense. ``what``
     names the set of files in messages ("vocals", ...)."""
     label = f" ({what})" if what else ""
-    scores, errors = compare(paths, originals, max_lag_ms, progress)
+    scores, errors = compare(paths, originals, max_lag_ms, progress, max_input_s)
     matches = matches_from(paths, scores, errors)
     resolution = resolve_order(matches, names)
     if resolution.problem is not None:

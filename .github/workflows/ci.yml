@@ -5,6 +5,11 @@ on:
     branches: [master, main]
   pull_request:
 
+# Nothing here writes to the repository: the token gets read access to it and nothing else,
+# whatever the repository's default is.
+permissions:
+  contents: read
+
 jobs:
   test:
     name: test (${{ matrix.os }}, Python ${{ matrix.python-version }})

@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
-from .checks import _describe, _number_problem
+from .checks import _describe, _number_problem, file_name_problem
 
 
 def _part_name_problem(name: Any) -> Optional[str]:
@@ -22,7 +22,7 @@ def _part_name_problem(name: Any) -> Optional[str]:
         return "must not contain a null character"
     if "/" in name or "\\" in name:
         return f"must be a bare file name without folders, got {name!r}"
-    return None
+    return file_name_problem(name)
 
 
 def load_manifest(path: str) -> dict:

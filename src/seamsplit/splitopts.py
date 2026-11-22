@@ -5,7 +5,9 @@ length, and the :class:`SplitConfig` they make."""
 from __future__ import annotations
 
 import argparse
+from typing import Optional
 
+from .audio import DEFAULT_MAX_DURATION_S
 from .cutpoints import CUT_BY, DEFAULT_BEAT_TOLERANCE_DB, DEFAULT_BEATS_PER_BAR
 from .services import apply_preset, find_preset
 from .splitter import DEFAULT_LOSSY_MARGIN_S, SplitConfig, default_margin_s
@@ -13,6 +15,35 @@ from .splitter import DEFAULT_LOSSY_MARGIN_S, SplitConfig, default_margin_s
 DEFAULT_TARGET_S = 52.0
 DEFAULT_OVERLAP_S = 4.0
 DEFAULT_FORMAT = "flac"
+
+
+def add_max_input_option(parser: argparse.ArgumentParser) -> None:
+    """Declare ``--max-input-duration`` on ``parser`` (a split, a merge)."""
+    parser.add_argument(
+        "--max-input-duration",
+        dest="max_input",
+        type=float,
+        default=DEFAULT_MAX_DURATION_S,
+        metavar="SECONDS",
+        help=(
+            "The longest audio file, in seconds, that is read; a longer one is refused "
+            "before it is decoded, or as soon as decoding passes the limit, whatever its "
+            "header says. All of the audio is held in memory, and a short file can decode "
+            "to a very large amount (two hours of stereo at 44.1 kHz take about 1.3 GB). "
+            f"With merge, also the longest merged result. 0: no limit. (default: "
+            f"{DEFAULT_MAX_DURATION_S:g}, two hours)"
+        ),
+    )
+
+
+def resolve_max_input(args: argparse.Namespace) -> Optional[float]:
+    """``--max-input-duration`` as the limit the library takes (``None``: none)."""
+    value = args.max_input
+    if value == 0:
+        return None
+    if not value > 0:
+        raise ValueError("--max-input-duration must be above 0 (0: no limit)")
+    return float(value)
 
 
 def add_split_options(parser: argparse.ArgumentParser) -> None:
@@ -184,6 +215,7 @@ def add_split_options(parser: argparse.ArgumentParser) -> None:
         default="320k",
         help="Export bitrate for lossy formats; ignored for wav/flac (default: 320k)",
     )
+    add_max_input_option(parser)
 
 
 def resolve_margin(args: argparse.Namespace) -> float:
@@ -241,4 +273,5 @@ def build_config(args: argparse.Namespace, output_dir: str) -> SplitConfig:
         beat_tolerance_db=args.beat_tolerance_db,
         snap_bar=args.snap_bar,
         bar_beats=args.bar_beats,
+        max_input_s=resolve_max_input(args),
     )

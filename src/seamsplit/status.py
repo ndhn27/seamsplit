@@ -14,6 +14,7 @@ import os
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Sequence
 
+from .audio import DEFAULT_MAX_DURATION_S
 from .manifest import load_manifest
 from .matching import AUDIO_EXTENSIONS, _list_files, _stem_matches
 from .pairing import identify
@@ -98,12 +99,15 @@ def compute_status(
     processed_dir: str,
     stems: Sequence[Optional[str]] = (None,),
     check_lengths: bool = True,
+    max_input_s: Optional[float] = DEFAULT_MAX_DURATION_S,
 ) -> JobStatus:
     """The status of the job whose split is in ``chunks_dir`` (it holds ``manifest.json``)
     and whose results are in ``processed_dir`` (which need not exist yet).
 
     ``stems`` are the words that tell the files wanted of every chunk apart (``("vocals",
-    "instrumental")``); ``(None,)`` means one file per chunk, whatever it is called."""
+    "instrumental")``); ``(None,)`` means one file per chunk, whatever it is called.
+    Files whose names were lost are decoded to be compared with the original chunks: none
+    longer than ``max_input_s`` seconds (``None``: no limit) is read."""
     manifest = load_manifest(os.path.join(chunks_dir, MANIFEST_FILE))
     names: List[str] = manifest["parts"]
     originals = [os.path.join(chunks_dir, n) for n in names]
@@ -122,7 +126,7 @@ def compute_status(
         gaps = [i for i, group in enumerate(found) if not group]
         if leftovers and gaps:
             if originals_here:
-                for match in identify(leftovers, originals):
+                for match in identify(leftovers, originals, max_input_s=max_input_s):
                     if match.confident and match.part in gaps:
                         sound.setdefault(match.part, []).append(match)
             else:

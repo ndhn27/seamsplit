@@ -30,7 +30,13 @@ from dataclasses import asdict, dataclass
 from typing import Callable, List, Optional, Tuple
 
 from .anchor import DEFAULT_RECON_WARN_DB, other_output_path
-from .audio import AudioSegment, CouldntDecodeError, CouldntEncodeError
+from .audio import (
+    DEFAULT_MAX_DURATION_S,
+    AudioSegment,
+    CouldntDecodeError,
+    CouldntEncodeError,
+    check_max_duration,
+)
 from .audition import AuditionOptions, export_auditions
 from .checks import _check_merge_options, _check_number, _check_samplerate, _check_threshold
 from .manifest import load_manifest
@@ -326,6 +332,7 @@ def merge_audio(
     recon_warn_db: Optional[float] = DEFAULT_RECON_WARN_DB,
     audition: Optional[AuditionOptions] = None,
     pairing: str = "auto",
+    max_input_s: Optional[float] = DEFAULT_MAX_DURATION_S,
 ) -> AudioSegment:
     """Load the manifest written by
     :func:`seamsplit.splitter.split_audio`, locate each part's processed
@@ -369,6 +376,11 @@ def merge_audio(
     for files found by name as well (and needs the originals), ``"off"`` never does. See
     :mod:`seamsplit.pairing`.
 
+    ``max_input_s`` is the longest file, and the longest merged result, in seconds, that is
+    read (default two hours; ``None``: no limit): all of the audio is held in memory, which
+    a short file can make very large. A longer one is an
+    :class:`~seamsplit.audio.AudioTooLongError` (a ``CouldntDecodeError``).
+
     ``audition`` (see :class:`seamsplit.audition.AuditionOptions`) also writes, for the
     seams it selects, the audio around them joined in each of the three ways, so they can
     be compared by ear; it needs a ``report`` to read the seams from.
@@ -396,6 +408,7 @@ def merge_audio(
         recon_warn_db,
     )
     samplerate = _check_numbers(tuning, samplerate, overlap_s)
+    max_input_s = check_max_duration(max_input_s)
     other_output = _check_outputs(
         output_path, other_match, other_output, pairing, originals_dir, anchor, audition, report
     )
@@ -421,6 +434,7 @@ def merge_audio(
                 part_names,
                 report,
                 what if other_paired else "",
+                max_input_s=max_input_s,
             )
 
     plan = MergePlan(
@@ -430,6 +444,7 @@ def merge_audio(
         other_paired.paths if other_paired else None,
         original_paths,
         **asdict(tuning),
+        max_input_s=max_input_s,
     )
     main, other = plan.split(plan.merge(report=report, progress=progress))
 

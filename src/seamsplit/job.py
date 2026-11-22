@@ -25,14 +25,18 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from . import __version__
+from .audio import DEFAULT_MAX_DURATION_S
 from .backends import (
     INSTRUMENTAL,
     Backend,
     BackendError,
+    CUSTOM,
     backend_from_dict,
+    backend_stem_names,
     backend_to_dict,
     check_available,
     separate_chunk,
+    upgrade_legacy_backend,
 )
 from .merger import merge_audio
 from .report import MergeReport
@@ -43,7 +47,10 @@ JOB_FILE = "job.json"
 CHUNKS_DIR = "chunks"
 PROCESSED_DIR = "processed"
 OUTPUT_DIR = "output"
-JOB_FORMAT = 1
+# 2: the backend is recorded as a name and a model (or the hash of a command of one's own),
+# never as the command itself. 1 recorded the command and is still read (see load_job).
+JOB_FORMAT = 2
+READABLE_FORMATS = (1, 2)
 
 
 def chunks_dir(folder: str) -> str:
@@ -58,7 +65,8 @@ def processed_dir(folder: str) -> str:
 class Job:
     """What ``job.json`` holds. ``split`` is what was decided when the file was split (the
     service, the limit, the chunk length ...), for the record; ``backend`` is set when the
-    job separates on this computer."""
+    job separates on this computer: what :func:`seamsplit.backends.backend_to_dict` makes of
+    it, which is not a command (a job folder can come from someone else)."""
 
     input_file: str
     input_size: Optional[int]
@@ -87,7 +95,7 @@ def load_job(folder: str) -> Optional[Job]:
             data = json.load(f)
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             raise ValueError(f"'{path}' is not valid JSON: {exc}") from exc
-    if not isinstance(data, dict) or data.get("seamsplit_job") != JOB_FORMAT:
+    if not isinstance(data, dict) or data.get("seamsplit_job") not in READABLE_FORMATS:
         raise ValueError(f"'{path}' is not a seamsplit job file (version {JOB_FORMAT})")
     if not isinstance(data.get("input_file"), str):
         raise ValueError(f"'{path}': 'input_file' must be a file name")
@@ -95,6 +103,12 @@ def load_job(folder: str) -> Optional[Job]:
     backend = data.get("backend")
     if backend is not None and not isinstance(backend, dict):
         raise ValueError(f"'{path}': 'backend' must be an object")
+    if backend is not None and data["seamsplit_job"] == 1:
+        # made before the command stopped being recorded: it is never run as it stands
+        try:
+            backend = upgrade_legacy_backend(backend)
+        except ValueError as exc:
+            raise ValueError(f"'{path}': {exc}") from exc
     split: Dict[str, Any] = data["split"] if isinstance(data.get("split"), dict) else {}
     return Job(data["input_file"], size if isinstance(size, int) else None, split, backend)
 
@@ -112,7 +126,7 @@ def job_stems(job: Job, match: Optional[str], other_match: Optional[str]) -> Lis
     """The words that tell the files wanted of each chunk apart: the backend's stems, or
     ``match`` and ``other_match`` (``[None]``: one file per chunk)."""
     if job.backend is not None:
-        return list(backend_from_dict(job.backend).stem_names)
+        return list(backend_stem_names(job.backend))
     words = [w for w in (match, other_match) if w]
     return list(words) or [None]
 
@@ -221,9 +235,15 @@ def run_job(
                     "separate this song here"
                 )
             if backend_to_dict(backend) != job.backend:
+                custom = CUSTOM in (backend.name, job.backend.get("name"))
                 raise ValueError(
-                    f"'{folder}' was started with another backend or model; use another "
-                    "--job folder to change it"
+                    f"'{folder}' was started with "
+                    + (
+                        "another backend or another command or stems"
+                        if custom
+                        else "another backend or model"
+                    )
+                    + "; use another --job folder to change it"
                 )
         elif job.backend is not None:
             backend = backend_from_dict(job.backend)
@@ -269,7 +289,10 @@ def run_job(
 
     stems = job_stems(job, match, other_match)
     main_word, other_word = main_and_other(stems)
-    result = RunResult(compute_status(chunks, processed, stems, check_lengths=False))
+    limit = (merge_options or {}).get("max_input_s", DEFAULT_MAX_DURATION_S)
+    result = RunResult(
+        compute_status(chunks, processed, stems, check_lengths=False, max_input_s=limit)
+    )
     result.split_now = result_split
 
     if backend is not None:
@@ -284,7 +307,9 @@ def run_job(
             except BackendError as exc:
                 result.failures[name] = str(exc)
                 say(f"  failed: {str(exc).splitlines()[0]}")
-        result.status = compute_status(chunks, processed, stems, check_lengths=False)
+        result.status = compute_status(
+            chunks, processed, stems, check_lengths=False, max_input_s=limit
+        )
 
     if not result.status.complete:
         return result

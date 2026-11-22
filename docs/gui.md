@@ -17,7 +17,10 @@ several files per chunk — and press *Merge*. The seam report is summarized on
 the page and can be downloaded as Markdown or JSON next to the merged file.
 Under *Advanced* you can pick the crossfade curve, the sample rate and the
 experimental seam search (with its fade length); the MP3 bitrate is next to the
-output format. If the service gave back both stems, name the second one
+output format. Both cards have *Longest audio read (minutes)* there, 120 by default
+(0: no limit): a longer track, or chunks that add up to more when merging, are refused
+before they fill the computer's memory
+(see [Long files and memory](splitting.md#long-files-and-memory)). If the service gave back both stems, name the second one
 (*Other stem*, e.g. `vocals`) and tick *Anchor to the original chunks*; a third
 card then lets you listen to the seams and answer which join sounds best (see
 [The listening kit](anchoring-and-listening.md#the-listening-kit)). A running split or merge

@@ -31,7 +31,7 @@ from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
-from .audio import AudioSegment, duration_s
+from .audio import DEFAULT_MAX_DURATION_S, AudioSegment, check_max_duration, duration_s
 
 from .cutpoints import (
     CUT_BY,
@@ -50,6 +50,22 @@ from .cutpoints import (
 _RMS_CHUNK_FRAMES = 4096
 
 
+class _MonoSamples:
+    """The mono mix of ``audio``, which can be sliced and measured like an array but is mixed
+    down only for the stretch that is asked for."""
+
+    def __init__(self, audio: AudioSegment) -> None:
+        self._audio = audio
+        self._length = int(audio.frame_count())
+
+    def __len__(self) -> int:
+        return self._length
+
+    def __getitem__(self, key: slice) -> np.ndarray:
+        start, stop, _ = key.indices(self._length)
+        return self._audio.mono_samples(start, max(start, stop))
+
+
 def compute_rms_curve(
     audio: AudioSegment, window_ms: float = 30, hop_ms: float = 10
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -64,10 +80,10 @@ def compute_rms_curve(
     terms are ever added — no running total that is subtracted from itself —
     so near-silent stretches, which are exactly what the cut-point search
     looks for, keep full precision next to loud ones."""
-    mono = audio.set_channels(1)
-    # integer samples, read in place; converted to float one block at a time
-    samples = mono.samples
-    sr = mono.frame_rate
+    # integer samples, mixed down and converted to float one block at a time: the mono
+    # copy of the whole track (half of it, or less) is never made
+    samples = _MonoSamples(audio)
+    sr = audio.frame_rate
 
     window = max(1, int(sr * window_ms / 1000))
     hop = max(1, int(sr * hop_ms / 1000))
@@ -362,8 +378,12 @@ class SplitConfig:
     # tracking; ``bar_beats`` is how many beats make a bar)
     snap_bar: bool = False
     bar_beats: int = DEFAULT_BEATS_PER_BAR
+    # The longest input file, in seconds, that is read (None: no limit). The whole track is
+    # held in memory, which a short file can make very large (see seamsplit.audio_io).
+    max_input_s: Optional[float] = DEFAULT_MAX_DURATION_S
 
     def __post_init__(self) -> None:
+        self.max_input_s = check_max_duration(self.max_input_s)
         self.export_format = normalize_export_format(self.export_format)
         if self.cut_by not in CUT_BY:
             raise ValueError(f"cut_by must be one of: {', '.join(CUT_BY)}")
@@ -492,7 +512,7 @@ def split_audio(
     lead_ms = overlap_ms // 2  # taken from the end of the previous chunk
     tail_ms = overlap_ms - lead_ms
 
-    audio = AudioSegment.from_file(input_file)
+    audio = AudioSegment.from_file(input_file, max_duration_s=config.max_input_s)
     total_len_ms = len(audio)
 
     plan = plan_cuts(audio, config)

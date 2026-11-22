@@ -21,6 +21,8 @@ to adjust (``--backend-cmd`` and ``--backend-stem`` take over completely).
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import re
 import shlex
@@ -44,6 +46,11 @@ class BackendError(ValueError):
     """The program ran and failed on this chunk, or wrote something that is not the stems."""
 
 
+class CustomBackendNotStored(ValueError):
+    """A job separates with a command of the user's own, and ``job.json`` does not keep the
+    command: it has to be given again (``--backend-cmd``)."""
+
+
 @dataclass(frozen=True)
 class Backend:
     """``command`` is the program and its arguments, with ``{input}`` (the chunk) and
@@ -54,6 +61,7 @@ class Backend:
     command: Tuple[str, ...]
     stems: Tuple[Tuple[str, str], ...]
     install_hint: str = ""
+    model: Optional[str] = None  # a preset's model; what a job file records of it
 
     @property
     def stem_names(self) -> List[str]:
@@ -76,6 +84,15 @@ _SEPARATOR_STEMS = (
 )
 
 PRESETS = ("demucs", "audio-separator", "uvr")
+# The name of a backend made with --backend-cmd. No preset has it, so a job file that says
+# "custom" can never be taken for a preset.
+CUSTOM = "custom"
+# The option each preset passes its model with: what is read back from a job file made before
+# job files stopped recording the command.
+_MODEL_OPTION = {"demucs": "-n", "audio-separator": "--model_filename"}
+_STEM_NAME = re.compile(r"[a-z0-9_-]+")
+# What a model read from a job file may look like: a name, not an option and not a path.
+_MODEL_NAME = re.compile(r"[^\s/\\-][^/\\\x00-\x1f\x7f]{0,199}")
 
 
 def preset_backend(name: str, model: Optional[str] = None) -> Backend:
@@ -93,6 +110,7 @@ def preset_backend(name: str, model: Optional[str] = None) -> Backend:
             tuple(command + ["{input}"]),
             _DEMUCS_STEMS,
             "pip install demucs (see its README for the model it downloads)",
+            model or None,
         )
     if key in ("audio-separator", "uvr"):
         command = ["audio-separator", "{input}", "--output_dir", "{output}"]
@@ -104,17 +122,77 @@ def preset_backend(name: str, model: Optional[str] = None) -> Backend:
             _SEPARATOR_STEMS,
             "pip install audio-separator (its README says which extra to take for your "
             "hardware); the models are downloaded on first use",
+            model or None,
         )
     raise ValueError(
         f"Unknown backend '{name}' (available: {', '.join(PRESETS)}, or --backend-cmd)"
     )
 
 
+def _split_windows(command: str) -> List[str]:
+    """A command line read the way Windows reads one (the rules of the C runtime and of
+    ``CommandLineToArgvW``): arguments are separated by spaces and tabs, double quotes group
+    (and are not part of the argument), and a backslash is only a backslash unless it comes
+    before a double quote, where each pair of them is one, and an odd one out makes the quote
+    a plain character. Single quotes mean nothing. ``C:\\Tools\\demucs.exe`` stays as it is."""
+    args: List[str] = []
+    current: List[str] = []
+    quoted = started = False
+    i, n = 0, len(command)
+    while i < n:
+        char = command[i]
+        if char == "\\":
+            j = i
+            while j < n and command[j] == "\\":
+                j += 1
+            run = j - i
+            if j < n and command[j] == '"':
+                current.append("\\" * (run // 2))
+                if run % 2:  # the quote is escaped: a quote that is part of the argument
+                    current.append('"')
+                    j += 1
+            else:
+                current.append("\\" * run)
+            started, i = True, j
+            continue
+        if char == '"':
+            if quoted and command[i + 1 : i + 2] == '"':  # "" inside quotes: a quote
+                current.append('"')
+                i += 1
+            else:
+                quoted = not quoted
+            started = True
+        elif char in " \t" and not quoted:
+            if started:
+                args.append("".join(current))
+                current, started = [], False
+        else:
+            current.append(char)
+            started = True
+        i += 1
+    if quoted:
+        raise ValueError("No closing quotation")
+    if started:
+        args.append("".join(current))
+    return args
+
+
+def split_command(command: str, windows: Optional[bool] = None) -> List[str]:
+    """``command`` as the list of arguments it stands for: on Windows as Windows reads a
+    command line (a backslash in ``C:\\Tools\\demucs.exe`` is a backslash), elsewhere as a
+    POSIX shell does (quotes and backslash escapes). ``windows`` says which, by default
+    the system the program runs on."""
+    if windows is None:
+        windows = os.name == "nt"
+    return _split_windows(command) if windows else shlex.split(command)
+
+
 def custom_backend(command: str, stem_patterns: Sequence[str]) -> Backend:
     """A backend of the user's own: ``command`` is a command line with ``{input}`` and
     ``{output}`` in it, and ``stem_patterns`` are ``STEM=REGEX`` (the regular expression is
-    matched against the file names the command writes)."""
-    parts = shlex.split(command)
+    matched against the file names the command writes). The command line is read as the
+    system reads one (see :func:`split_command`)."""
+    parts = split_command(command)
     if not parts:
         raise ValueError("--backend-cmd is empty")
     if not any("{input}" in p for p in parts) or not any("{output}" in p for p in parts):
@@ -136,7 +214,7 @@ def custom_backend(command: str, stem_patterns: Sequence[str]) -> Backend:
         stems.append((stem, pattern))
     if len({s for s, _ in stems}) != len(stems):
         raise ValueError("--backend-stem names a stem twice")
-    return Backend("custom", tuple(parts), tuple(stems), "")
+    return Backend(CUSTOM, tuple(parts), tuple(stems), "")
 
 
 def backend_from_options(
@@ -156,26 +234,111 @@ def backend_from_options(
     return preset_backend(name, model)
 
 
-def backend_to_dict(backend: Backend) -> Dict[str, object]:
-    return {
-        "name": backend.name,
-        "command": list(backend.command),
-        "stems": [list(item) for item in backend.stems],
-        "install_hint": backend.install_hint,
-    }
-
-
-def backend_from_dict(data: Dict[str, object]) -> Backend:
-    command = data["command"]
-    stems = data["stems"]
-    if not isinstance(command, list) or not isinstance(stems, list) or not command:
-        raise ValueError("the backend in job.json is not valid")
-    return Backend(
-        str(data.get("name", "custom")),
-        tuple(str(c) for c in command),
-        tuple((str(s[0]), str(s[1])) for s in stems),
-        str(data.get("install_hint", "")),
+def fingerprint(backend: Backend) -> str:
+    """A hash of the command and the stem patterns of a backend: what a job file records of
+    a backend of the user's own, to tell later that it is given the same one again."""
+    blob = json.dumps(
+        {"command": list(backend.command), "stems": [list(item) for item in backend.stems]},
+        sort_keys=True,
+        separators=(",", ":"),
     )
+    return "sha256:" + hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def backend_to_dict(backend: Backend) -> Dict[str, object]:
+    """What ``job.json`` records of a backend. Never a command: a preset is its name and
+    model (the command is made from them by this code), a backend of one's own is the
+    names of its stems and the hash of its command. A job folder is made to be carried to
+    another computer and opened there, so nothing in it may say what is to be run."""
+    if backend.name == CUSTOM:
+        return {"name": CUSTOM, "stems": backend.stem_names, "fingerprint": fingerprint(backend)}
+    return {"name": backend.name, "model": backend.model}
+
+
+def _check_stem_names(names: object) -> List[str]:
+    if (
+        not isinstance(names, list)
+        or not names
+        or not all(isinstance(n, str) and _STEM_NAME.fullmatch(n) for n in names)
+        or len(set(names)) != len(names)
+    ):
+        raise ValueError("the stems of the backend in job.json are not valid")
+    return list(names)
+
+
+def backend_stem_names(data: object) -> List[str]:
+    """The stems a job's backend writes, from what ``job.json`` records of it. Nothing is
+    built that could be run."""
+    if not isinstance(data, dict):
+        raise ValueError("the backend in job.json is not valid")
+    name = data.get("name")
+    if name == CUSTOM:
+        return _check_stem_names(data.get("stems"))
+    if not isinstance(name, str) or name not in _MODEL_OPTION:
+        raise ValueError("the backend in job.json is not valid")
+    return preset_backend(name).stem_names
+
+
+def backend_from_dict(data: object) -> Backend:
+    """The backend a job file records, for a preset only: its command is made here, from
+    the name and the model, whatever else the file says. A backend of one's own is not
+    kept (see :func:`backend_to_dict`) and raises :class:`CustomBackendNotStored`."""
+    if not isinstance(data, dict):
+        raise ValueError("the backend in job.json is not valid")
+    name = data.get("name")
+    if name == CUSTOM:
+        raise CustomBackendNotStored(
+            "this job separates with a command of your own, and job.json does not keep the "
+            "command (a job folder can come from someone else, and a command found in it "
+            "would run without you having written it): give --backend-cmd and --backend-stem "
+            "again, the same as when the job was started"
+        )
+    if not isinstance(name, str) or name not in _MODEL_OPTION:
+        raise ValueError("the backend in job.json is not valid")
+    model = data.get("model")
+    if model is not None and not (isinstance(model, str) and _MODEL_NAME.fullmatch(model)):
+        raise ValueError(
+            f"the model in job.json ({model!r}) is not a model name: give --backend {name} "
+            "--backend-model MODEL again"
+        )
+    return preset_backend(name, model)
+
+
+def upgrade_legacy_backend(data: object) -> Dict[str, object]:
+    """What a job file made by an earlier version recorded as the backend (the whole command), as
+    :func:`backend_to_dict` records it now. A command that is the one this code makes for
+    the preset it names becomes that preset; any other (a command of one's own, or one
+    that was edited) becomes a backend of one's own, which is never run unless the same
+    command is given again."""
+    if not isinstance(data, dict):
+        raise ValueError("the backend in job.json is not valid")
+    command, stems = data.get("command"), data.get("stems")
+    if (
+        not isinstance(command, list)
+        or not command
+        or not all(isinstance(c, str) for c in command)
+        or not isinstance(stems, list)
+        or not all(
+            isinstance(i, (list, tuple)) and len(i) == 2 and all(isinstance(x, str) for x in i)
+            for i in stems
+        )
+    ):
+        raise ValueError("the backend in job.json is not valid")
+    pairs = tuple((str(i[0]), str(i[1])) for i in stems)
+    name = str(data.get("name", "")).strip().lower()
+    option = _MODEL_OPTION.get(name)
+    if option is not None:
+        at = command.index(option) if option in command else -1
+        model = command[at + 1] if 0 <= at < len(command) - 1 else None
+        try:
+            made = preset_backend(name, model)
+        except ValueError:  # pragma: no cover - a name in _MODEL_OPTION is always a preset
+            made = None
+        if made is not None and list(made.command) == command and made.stems == pairs:
+            return backend_to_dict(made)
+    old = Backend(CUSTOM, tuple(command), pairs, "")
+    _check_stem_names(old.stem_names)
+    return backend_to_dict(old)
 
 
 def check_available(backend: Backend) -> None:

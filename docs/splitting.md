@@ -46,8 +46,26 @@ Key options:
 | `--min-final` | `5` | If the last chunk would be shorter than this (seconds), the last two chunks are re-divided so neither exceeds the length limit. Must be at most half of `--target` + `--after-slack`. |
 | `--format` | `flac` | Export format of the chunks. `flac` and `wav` are lossless; `mp3` is lossy — see below. |
 | `--bitrate` | `320k` | Bitrate of lossy formats; ignored for `wav` / `flac`. |
+| `--max-input-duration` | `7200` | The longest input file, in seconds, that is read; `0` removes the limit. A longer file is refused before it is decoded, and see [Long files and memory](#long-files-and-memory). |
 | `--out` | `chunks` | Output directory. |
 | `--dry-run` | off | Show the planned chunks (and the longest one) without writing anything. |
+
+### Long files and memory
+
+All of the audio is held in memory, and what it takes is the length times the sample rate,
+the channels and the sample width, not the size of the file: 15 MB of FLAC silence can be 24
+hours, 16 GB decoded. Two hours of stereo at 44.1 kHz and 16 bit are 1.3 GB, and a split needs
+about 1.4 times that at its peak (a 30-minute 16-bit stereo WAV, 318 MB, peaks at about 425 MB;
+before the copies were cut it was 960 MB).
+
+So a file is read only up to `--max-input-duration` (two hours by default). A file that says
+in its header that it is longer is refused before anything is decoded, and decoding stops as
+soon as it passes the limit whatever the header says. The limit is also a limit in bytes, that
+of two hours of 48 kHz, stereo, 32-bit audio (2.8 GB), so a rate or a channel count that is not
+ordinary cannot get round it. Raise it for a long mix if the computer has the memory
+(`--max-input-duration 14400`; in the GUI, *Longest audio read (minutes)* under *Advanced*), lower it
+on a small one. From Python, `SplitConfig(max_input_s=...)`
+and `AudioSegment.from_file(path, max_duration_s=...)` take the same limit (`None`: none).
 
 **Lossless chunks (the default).** MP3 is lossy and every encode shifts the audio:
 the encoder adds delay and padding (an MP3 of exactly 59.000 s reads 59.037 s),

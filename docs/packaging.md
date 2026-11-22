@@ -7,7 +7,7 @@
 FFmpeg inside; nothing to install, nothing on the `PATH` needed):
 
 ```bash
-pip install . -r packaging/requirements-build.txt   # PyInstaller, at the version the releases use
+pip install . -r packaging/requirements-build.txt   # PyInstaller, numpy and PyAV, at the versions the releases use
 pyinstaller packaging/seamsplit.spec --noconfirm     # dist/seamsplit, dist/seamsplit.exe on Windows
 python packaging/smoke_test.py dist/seamsplit        # splits and merges with an empty PATH
 ```
@@ -17,8 +17,9 @@ The release workflow (`.github/workflows/release.yml`) builds them for Linux, Wi
 each. A release gets the programs with their SHA-256 sums, a `BUILD_INFO` file per system (the
 PyAV and FFmpeg versions, licence and options inside the program) and
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). The workflow's actions are pinned to
-commits and PyInstaller to a version (`packaging/requirements-build.txt`); Dependabot proposes
-the updates. Each of the four is built by the release workflow and passes its smoke test (a
+commits, and PyInstaller, numpy and PyAV (so the FFmpeg inside it) to a version
+(`packaging/requirements-build.txt`); the workflows' token can only read the repository, except
+in the job that makes the release. Dependabot proposes the updates. Each of the four is built by the release workflow and passes its smoke test (a
 split and a merge with an empty `PATH`) on a GitHub-hosted runner of its own system. The
 programs are about 74 MB on Linux, 48 MB on Windows, 31 MB on macOS (Apple silicon) and 37 MB
 on macOS (Intel). The start-up times in the

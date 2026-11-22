@@ -5,6 +5,109 @@ someone who uses or develops it. The format follows [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+### Security
+
+- `seamsplit run --job` ran whatever command `job.json` held. A job folder is made to be carried
+  to another computer and picked up there, so opening one from someone else was running their
+  code: with `backend.command` edited to `["sh", "-c", "id > PWNED.txt"]` (and the chunks left
+  as they were), `status` ran nothing but `run --job`, with no option, ran it. `SECURITY.md` and
+  the docs did not say so. `job.json` (now format 2) records a preset as its name and model, and
+  the command is made from them by SeamSplit, whatever else the file says; a model that is a
+  path or starts with `-` is refused. A command of your own (`--backend-cmd`) is recorded as the
+  stem names and a hash, never as the command, so resuming such a job means giving
+  `--backend-cmd` and `--backend-stem` again, and a different command is refused. Job files of
+  the earlier format are still read: a preset's command that is exactly the one SeamSplit would
+  make is that preset, any other is a command of your own and runs only if you give it again.
+  `SECURITY.md` now lists `job.json` and says what opening a job folder may do.
+- Decoding had no limit, and `SECURITY.md` counts audio that exhausts memory as a
+  vulnerability. All of a file's audio is held in memory, so what it takes is its length
+  times its rate, channels and width, not its size on disk: a 10-minute stereo 48 kHz FLAC of
+  silence (103.6 KiB) decoded to 115 MB and raised the resident memory by 366 MB, and a 24-hour
+  one (14.5 MB) would take about 16.6 GB. A file is now read only up to `--max-input-duration`
+  seconds (default two hours; `0` removes the limit), on `split`, `merge` and `run`
+  (`SplitConfig.max_input_s`, `merge_audio(max_input_s=...)`, `AudioSegment.from_file(...,
+  max_duration_s=...)`; `None`: no limit). A file whose header says it is longer is refused
+  before anything is decoded (the 24-hour file, in 0.3 s and 3 MB), and decoding stops as soon
+  as it passes the limit whatever the header says (a header can leave the length out or lie
+  about it). The limit is also a limit in bytes, that of two hours of 48 kHz stereo 32-bit
+  audio, so a high rate or many channels cannot get round it. `merge` also limits the merged
+  result, which it holds whole, not only each chunk. The error is an `AudioTooLongError` (a
+  `CouldntDecodeError`) that names the option.
+  (The option is `--max-input-duration`: `--max-duration` was already another name for
+  `--limit`, the AI service's per-file limit.) The comparison of processed files with the
+  original chunks (`--pairing`, and the files of `status` whose names were lost) reads under
+  the same limit (`status` has the option too), and the GUI has *Longest audio read (minutes)*
+  under *Advanced* on both cards (120 by default, 0: no limit), with an error that names that
+  field instead of the command-line option.
+
+- The GUI's request reader took `Content-Length: -1` for "read until the client closes the
+  connection": the thread of that request waited for as long as the client kept the connection
+  open (the server went on serving others, and a request needs the token, so the effect was
+  small). A body length that is not a plain number of bytes (`-1`, `+5`, `1e3`, non-ASCII
+  digits) is refused with a 400 at once, for JSON bodies as for uploads, and a client that stops
+  sending or reading is dropped after 120 seconds (`_Handler.timeout`), so a request that sent
+  less than it promised cannot hold a thread either.
+- The names of the parts in `manifest.json` were checked for folders (`/`, `\\`) and not for what
+  Windows does with a name: `ntpath.join(r"C:\work\chunks", "D:evil.flac")` is `D:evil.flac`,
+  which is out of the folder (it could only make a file be read, and only on Windows), and
+  `NUL.wav` is the NUL device. The rules the GUI already used for the names of uploads (no
+  `: < > " | ? *`, no device names) now sit in `seamsplit.checks.file_name_problem` and a manifest
+  is checked with them. On Windows only, since `Artist: Title_part01.wav` is a good name where the
+  song was split on Linux or macOS and is still read there; a manifest made there and opened on
+  Windows is refused with the name that cannot be a file.
+- A text file called `song.mp3` that said `ffconcat version 1.0` and `file other.wav` was
+  detected by FFmpeg as a playlist and decoded as the audio of `other.wav`, a file next to it or
+  in a folder under it (absolute paths and `file://` HLS playlists were refused by FFmpeg 9.0.2,
+  PyAV 19.0.2, which is what this was tested with; other versions were not looked at, and what
+  FFmpeg refuses by itself is not left to it). Files are now opened with a list of the demuxers
+  that may be used when the format is found by looking at the file, all of them but the ones
+  that follow what the file lists (ffconcat, HLS, DASH, RTSP, RTP/SDP, image sequences, lavfi,
+  ffmetadata), and with `protocol_whitelist` set to `file,pipe,fd`, so no input opens a network
+  address; a format that is named by the caller is used as named. Such a file is a
+  `CouldntDecodeError` that says what it is. WAV, FLAC, MP3, M4A/MP4, AIFF, AAC and Opus are
+  read as before.
+- The release workflow built the programs with whatever numpy and PyAV (with the FFmpeg inside
+  it) were newest that day, and neither workflow said what its token may do. `numpy` and `av`
+  are pinned in `packaging/requirements-build.txt` to the versions the tests ran with (they have
+  Python 3.12 wheels for all four systems the release builds for) next to PyInstaller, which
+  Dependabot already watched, and both workflows start with `permissions: contents: read`; only
+  the job that makes the release asks for more, as before. The `BUILD_INFO` file still records
+  the versions. (The actions were already pinned to commits.)
+
+### Fixed
+
+- Output files were written in place, so an encoder that failed half-way, a full disk or a kill
+  left a truncated file where a good one had been (`manifest.json`, `job.json` and `choices.json`
+  already went through a temporary file). Audio, reports and the listening kit are now written to
+  a hidden file next to the destination, which takes the old file's place only when it is
+  complete, and is removed if anything goes wrong (including an interrupt). A symbolic link is
+  written through and stays a link, `/dev/null` and other files that are not regular files are
+  written to as they are, and a file object is written to as before.
+- A folder whose name has characters a glob pattern gives a meaning to was read as a
+  pattern: with the results in `song [live]/processed`, `merge`, `status` and `run` found
+  `0 for 2 parts` and nothing to merge, while the same files in `song/processed` worked
+  (`[live]` is a class of characters, `*` and `?` wildcards). The folder is now a path and
+  not a pattern when its files are listed, and which files are listed is unchanged (hidden
+  files are still skipped). It affected job folders too: `song [live].job/processed`.
+- `--backend-cmd` was split as a POSIX shell splits a line on every system, which eats the
+  backslashes of a Windows path: `C:\Tools\demucs\demucs.exe` became
+  `C:Toolsdemucsdemucs.exe`, and the command was not found. On Windows the line is now read as
+  Windows reads one (a backslash is a backslash, double quotes group a path with spaces,
+  single quotes mean nothing; a quote that is not closed is still an error); elsewhere nothing
+  changes. `posix=False` would have kept the quote marks in the arguments, so it is not what
+  is used; the reading is `split_command` in `seamsplit.backends`, and it is tested to give back
+  the arguments that `subprocess.list2cmdline` writes from them.
+
+### Changed
+
+- Less memory for the same work. Decoding held the audio three times at its peak (the
+  blocks, their join and its conversion to bytes) and now holds it once; mixing a track down
+  to mono for the loudness curve made a second copy (the curve is now measured on a block at
+  a time, with the same numbers), and the merge joined its pieces into a second copy of the
+  result. A 30-minute 16-bit stereo WAV (318 MB) peaks at about 425 MB in `split` (was
+  960 MB) and about 495 MB in `merge` (was 790 MB). The whole file is still read into
+  memory: memory grows with the length, up to the limit.
+
 ## [1.1.1] - 2026-11-12
 
 ### Fixed

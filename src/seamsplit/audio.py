@@ -20,17 +20,22 @@ written by FFmpeg's encoders.
 
 from __future__ import annotations
 
+import io
 import os
 from typing import Any, List, Optional, Tuple
 
 import numpy as np
 
 from .audio_io import (  # noqa: F401  (re-exported: part of this module's interface)
+    DEFAULT_MAX_DURATION_S,
     SAMPLE_TYPES,
+    AudioTooLongError,
     CouldntDecodeError,
     CouldntEncodeError,
     PathOrFile,
+    check_max_duration,
     duration_s,
+    too_long,
     encode_audio,
     engine_info,
     read_audio,
@@ -55,20 +60,28 @@ def db_to_float(db: float) -> float:
 _DOWNMIX_BLOCK = 1 << 20  # frames at a time: the temporaries stay a few MB whatever the length
 
 
-def _downmix(rows: np.ndarray, dtype: np.dtype) -> np.ndarray:
-    """Two or more channels to one: two channels are ``floor(0.5 l + 0.5 r)``
+def _downmix_block(block: np.ndarray, dtype: np.dtype) -> np.ndarray:
+    """The frames of ``block`` (two or more channels) mixed down to one: the floating point
+    temporaries are the size of ``block``, so it should be a modest part of a long file."""
+    piece = np.empty(len(block), dtype=dtype)
+    if block.shape[1] == 2:
+        both = block.astype(np.float64)
+        piece[:] = np.floor(both[:, 0] * 0.5 + both[:, 1] * 0.5)
+    else:
+        piece[:] = (block.astype(np.int64) // block.shape[1]).sum(axis=1)
+    return piece
+
+
+def _downmix(rows: np.ndarray, dtype: np.dtype) -> bytes:
+    """Two or more channels to one, as bytes: two channels are ``floor(0.5 l + 0.5 r)``
     in floating point, more are the sum of ``floor(x / n)`` of each. Done in blocks, because
-    the temporaries of a whole file (float64 or int64 per sample) are several times its size."""
-    n, channels = rows.shape
-    out = np.empty(n, dtype=dtype)
-    for start in range(0, n, _DOWNMIX_BLOCK):
-        block = rows[start : start + _DOWNMIX_BLOCK]
-        if channels == 2:
-            both = block.astype(np.float64)
-            out[start : start + len(block)] = np.floor(both[:, 0] * 0.5 + both[:, 1] * 0.5)
-        else:
-            out[start : start + len(block)] = (block.astype(np.int64) // channels).sum(axis=1)
-    return out
+    the temporaries of a whole file (float64 or int64 per sample) are several times its size,
+    and written block by block into the bytes, so the result is not in memory twice (an array
+    that is then converted with ``tobytes()`` is)."""
+    out = io.BytesIO()
+    for start in range(0, len(rows), _DOWNMIX_BLOCK):
+        out.write(_downmix_block(rows[start : start + _DOWNMIX_BLOCK], dtype))
+    return out.getvalue()
 
 
 def _scale(samples: np.ndarray, factor: Any, width: int) -> np.ndarray:
@@ -211,6 +224,16 @@ class AudioSegment:
     def frames(self) -> np.ndarray:
         """The samples as one row per frame, one column per channel (no copy)."""
         return self.samples.reshape(-1, self.channels)
+
+    def mono_samples(self, start: int = 0, stop: Optional[int] = None) -> np.ndarray:
+        """The frames ``start:stop`` mixed down to one channel, as ``set_channels(1)`` mixes
+        them (a view for mono audio), without making the mono copy of the whole segment: for
+        analysing a long track a block at a time. Keep the stretch asked for modest, the
+        temporaries are as long as it is."""
+        rows = self.frames[start:stop]
+        if self.channels == 1:
+            return rows[:, 0]
+        return _downmix_block(rows, self.dtype)
 
     def get_array_of_samples(self) -> "Any":
         """The samples as an :class:`array.array` (``samples`` is the same without the
@@ -399,7 +422,7 @@ class AudioSegment:
         if channels == 2 and self.channels == 1:
             out = np.repeat(rows, 2, axis=1)
         elif channels == 1 and self.channels >= 2:
-            out = _downmix(rows, self.dtype)
+            return self._spawn(_downmix(rows, self.dtype), channels=1)
         elif self.channels == 1:
             out = np.repeat(rows, channels, axis=1)
         else:
@@ -424,13 +447,20 @@ class AudioSegment:
     # -- files ----------------------------------------------------------------------
 
     @classmethod
-    def from_file(cls, file: PathOrFile, format: Optional[str] = None) -> "AudioSegment":
+    def from_file(
+        cls,
+        file: PathOrFile,
+        format: Optional[str] = None,
+        max_duration_s: Optional[float] = DEFAULT_MAX_DURATION_S,
+    ) -> "AudioSegment":
         """Read an audio file (a path or a binary file object) in any format FFmpeg knows.
 
         The samples are 16 bit unless the file holds integers of another size (8, 32 bit,
         24 bit as 32) or 32 bit float PCM (read as 32 bit). Lossy formats are decoded to 16
-        bit."""
-        data, width, rate, channels = read_audio(file, format)
+        bit. A file with more than ``max_duration_s`` seconds of audio (default two hours;
+        ``None``: no limit) is refused with :class:`AudioTooLongError`: all of the audio is
+        held in memory, which a short file can make very large."""
+        data, width, rate, channels = read_audio(file, format, max_duration_s)
         return cls(data, sample_width=width, frame_rate=rate, channels=channels)
 
     def export(

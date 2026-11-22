@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass
 from typing import Callable, Iterable, Iterator, List, Optional, Sequence, Tuple
 
-from .audio import AudioSegment
+from .audio import DEFAULT_MAX_DURATION_S, AudioSegment, too_long
 
 from .anchor import DEFAULT_RECON_WARN_DB, AnchorOptions, prepare_chunk, split_stems
 from .crossfade import (
@@ -74,6 +74,9 @@ class MergePlan:
     seam_warn_db: Optional[float] = DEFAULT_SEAM_WARN_DB
     length_tolerance_ms: float = DEFAULT_LENGTH_TOLERANCE_MS
     recon_warn_db: Optional[float] = DEFAULT_RECON_WARN_DB
+    # The longest file, and the longest merged result, in seconds, that is read (None: no
+    # limit): chunks that come from someone else may be as long as they like.
+    max_input_s: Optional[float] = DEFAULT_MAX_DURATION_S
 
     def stream(
         self,
@@ -93,11 +96,19 @@ class MergePlan:
             recon_warn_db=self.recon_warn_db,
         )
         clipped = 0
+        limit = self.max_input_s
+        merged_s = 0.0
         for position, index in enumerate(indices):
             part = index + 1
             if progress is not None:
                 progress(part, len(self.paths), os.path.basename(self.paths[index]))
-            seg = AudioSegment.from_file(self.paths[index])
+            seg = AudioSegment.from_file(self.paths[index], max_duration_s=limit)
+            # the merge holds all of its result: the chunks together are limited too
+            merged_s += seg.duration_seconds - (self.overlap_ms / 1000 if position else 0.0)
+            if limit is not None and merged_s > limit:
+                raise too_long(
+                    "the merged audio", limit, f"reaches {merged_s:.0f} s at part {part}"
+                )
             _check_part_length(part, seg, self.manifest, self.length_tolerance_ms, report)
             gain = extra_db if position == 0 else 0.0
             if self.other_paths is None and self.original_paths is None and not gain:
@@ -105,10 +116,10 @@ class MergePlan:
                 continue
             other = None
             if self.other_paths is not None:
-                other = AudioSegment.from_file(self.other_paths[index])
+                other = AudioSegment.from_file(self.other_paths[index], max_duration_s=limit)
             original = None
             if self.original_paths is not None:
-                original = AudioSegment.from_file(self.original_paths[index])
+                original = AudioSegment.from_file(self.original_paths[index], max_duration_s=limit)
             prepared, over = prepare_chunk(
                 part, seg, other, original, options, report, self.length_tolerance_ms, gain
             )

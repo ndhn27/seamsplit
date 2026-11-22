@@ -9,7 +9,13 @@ import pytest
 from seamsplit.audio import AudioSegment
 
 from fake_service import SR, hand_back, make_song, to_array, to_segment
-from seamsplit.backends import BackendUnavailable, preset_backend
+from seamsplit.backends import (
+    BackendUnavailable,
+    CustomBackendNotStored,
+    custom_backend,
+    fingerprint,
+    preset_backend,
+)
 from seamsplit.cli import main
 from seamsplit.job import (
     JOB_FILE,
@@ -346,6 +352,172 @@ def test_a_backend_that_is_not_installed_stops_the_job_before_the_split(
     with pytest.raises(BackendUnavailable, match="'demucs' was not found"):
         _run(folder, song, backend=preset_backend("demucs"))
     assert not os.path.exists(os.path.join(folder, "chunks"))
+
+
+def test_a_job_folder_with_special_characters_in_its_name_runs_to_the_end(
+    fake_programs, tmp_path, song
+):
+    """The results are looked for in ``song [live].job/processed``, a pattern to a glob."""
+    folder = str(tmp_path / "song [live].job")
+    result, _ = _run(folder, song, backend=preset_backend("demucs"))
+    assert result.separated == 3 and result.done
+
+
+# -- a job folder that comes from someone else -----------------------------------------
+#
+# A job folder is made to be carried to another computer and picked up there, so opening one
+# must not be a way to run a command: job.json says which backend, never what to run.
+
+HOSTILE = ["sh", "-c", "id > PWNED.txt"]
+OWN_STEMS = [r"vocals=\(vocals\)", r"instrumental=\(instrumental\)"]
+
+
+def _own():
+    return custom_backend("audio-separator {input} --output_dir {output}", OWN_STEMS)
+
+
+def _rewrite_job(folder, **changes):
+    path = os.path.join(folder, JOB_FILE)
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    data.update(changes)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+
+
+def test_the_job_file_holds_no_command(fake_programs, tmp_path, song):
+    for name, backend in (("preset", preset_backend("demucs", "m")), ("own", _own())):
+        folder = str(tmp_path / name)
+        _run(folder, song, backend=backend)
+        with open(os.path.join(folder, JOB_FILE), encoding="utf-8") as f:
+            text = f.read()
+        assert (
+            json.loads(text)["seamsplit_job"] == 2 and "command" not in json.loads(text)["backend"]
+        )
+        for piece in ("{input}", "--output_dir", "--two-stems", "audio-separator"):
+            assert piece not in text
+    assert load_job(str(tmp_path / "preset")).backend == {"name": "demucs", "model": "m"}
+    assert load_job(str(tmp_path / "own")).backend["fingerprint"] == fingerprint(_own())
+
+
+@pytest.mark.parametrize(
+    "version, backend",
+    [
+        # the case that was reported: the command written into job.json
+        (2, {"name": "custom", "stems": ["vocals"], "fingerprint": "sha256:0"}),
+        (
+            1,
+            {"name": "custom", "command": HOSTILE, "stems": [["vocals", "^v"]], "install_hint": ""},
+        ),
+        # a command in the place of a preset's, with the preset's name on it
+        (
+            1,
+            {
+                "name": "demucs",
+                "command": HOSTILE,
+                "stems": [["vocals", "^vocals"], ["instrumental", "^no_vocals"]],
+                "install_hint": "",
+            },
+        ),
+    ],
+)
+def test_a_job_file_edited_to_run_a_command_does_not_run_it(
+    tmp_path, song, capsys, monkeypatch, version, backend
+):
+    monkeypatch.chdir(tmp_path)  # where `id > PWNED.txt` would have written
+    folder = str(tmp_path / "j")
+    _cli(capsys, "run", song, "--job", folder, "--match", "instrumental", *SPLIT, expect=3)
+    _rewrite_job(folder, seamsplit_job=version, backend=backend)
+    _cli(capsys, "status", folder, expect=3)  # looking at a job runs nothing
+    err = _cli(capsys, "run", "--job", folder, expect=1).err
+    assert "--backend-cmd" in err
+    assert not (tmp_path / "PWNED.txt").exists()
+
+
+def test_a_command_beside_a_presets_name_in_the_job_file_is_not_the_one_that_runs(
+    fake_programs, tmp_path, song, capsys, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    folder = str(tmp_path / "j")
+    _cli(capsys, "run", song, "--job", folder, "--match", "instrumental", *SPLIT, expect=3)
+    _rewrite_job(folder, backend={"name": "demucs", "model": None, "command": HOSTILE})
+    out = _cli(capsys, "run", "--job", folder, "--samplerate", str(SR)).out
+    assert "demucs on" in out and "Done. Merged:" in out  # the preset, made by this code
+    assert not (tmp_path / "PWNED.txt").exists()
+
+
+@pytest.mark.parametrize("model", ["--output_dir=/tmp/x", "../../x.ckpt", "/etc/passwd"])
+def test_a_model_that_is_a_path_or_an_option_is_not_run(
+    fake_programs, tmp_path, song, capsys, monkeypatch, model
+):
+    folder = str(tmp_path / "j")
+    _cli(capsys, "run", song, "--job", folder, "--match", "instrumental", *SPLIT, expect=3)
+    _rewrite_job(folder, backend={"name": "audio-separator", "model": model})
+    monkeypatch.setenv("FAKE_LOG", str(tmp_path / "log.txt"))
+    err = _cli(capsys, "run", "--job", folder, expect=1).err
+    assert "not a model name" in err and "--backend-model" in err
+    assert not (tmp_path / "log.txt").exists()  # the program was not started
+
+
+def test_a_job_file_of_the_older_kind_still_resumes_for_a_preset(
+    fake_programs, tmp_path, song, capsys
+):
+    folder = str(tmp_path / "j")
+    _cli(capsys, "run", song, "--job", folder, "--match", "instrumental", *SPLIT, expect=3)
+    old = preset_backend("audio-separator", "m.onnx")
+    _rewrite_job(
+        folder,
+        seamsplit_job=1,
+        backend={
+            "name": old.name,
+            "command": list(old.command),
+            "stems": [list(item) for item in old.stems],
+            "install_hint": old.install_hint,
+        },
+    )
+    assert load_job(folder).backend == {"name": "audio-separator", "model": "m.onnx"}
+    out = _cli(capsys, "run", "--job", folder, "--samplerate", str(SR)).out
+    assert "audio-separator on" in out and "Done. Merged:" in out
+
+
+def test_a_job_with_a_command_of_ones_own_is_resumed_only_with_that_command(
+    fake_programs, tmp_path, song, monkeypatch
+):
+    folder = str(tmp_path / "job")
+    monkeypatch.setenv("FAKE_FAIL_ON", "part02")
+    result, _ = _run(folder, song, backend=_own())
+    assert result.separated == 2 and not result.done
+    monkeypatch.delenv("FAKE_FAIL_ON")
+
+    assert job_stems(load_job(folder), None, None) == [
+        "vocals",
+        "instrumental",
+    ]  # no command needed
+    with pytest.raises(CustomBackendNotStored, match="--backend-cmd"):
+        _run(folder, None)
+    other = custom_backend("audio-separator {input} --output_dir {output} --x", OWN_STEMS)
+    with pytest.raises(ValueError, match="another backend or another command"):
+        _run(folder, song, backend=other)
+    with pytest.raises(ValueError, match="another backend or another command"):
+        _run(folder, song, backend=preset_backend("audio-separator"))
+    assert not os.path.exists(os.path.join(folder, "output"))
+
+    result, _ = _run(folder, None, backend=_own())  # the same command, given again
+    assert result.done and result.separated == 1
+
+
+def test_a_killed_split_of_a_job_with_a_command_of_ones_own_needs_the_command_again(
+    fake_programs, tmp_path, song, killed_in_the_split
+):
+    folder = str(tmp_path / "job")
+    with pytest.raises(_Killed):
+        _run(folder, song, backend=_own())
+    killed_in_the_split.undo()  # undoes the stand-in programs' PATH as well: put it back
+    killed_in_the_split.setenv("PATH", f"{fake_programs}{os.pathsep}{os.environ['PATH']}")
+    with pytest.raises(CustomBackendNotStored, match="--backend-cmd"):
+        _run(folder, None)
+    result, _ = _run(folder, None, backend=_own())
+    assert result.done
 
 
 # -- the job file and the stems ----------------------------------------------------

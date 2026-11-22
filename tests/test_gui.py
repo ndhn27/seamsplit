@@ -551,6 +551,95 @@ def test_build_split_config_rejects_bad_values(tmp_path, params, message):
         build_split_config(params, str(tmp_path))
 
 
+def test_the_limit_on_the_form_is_in_minutes_and_blank_is_the_default(tmp_path):
+    from seamsplit.audio import DEFAULT_MAX_DURATION_S
+
+    def limit(**extra):
+        return build_split_config({"limit": "59", **extra}, str(tmp_path))[0].max_input_s
+
+    assert limit(max_input_min="30") == 1800
+    assert limit(max_input_min="0.5") == 30
+    assert limit() == limit(max_input_min="") == DEFAULT_MAX_DURATION_S
+    assert limit(max_input_min="0") is None  # 0: no limit
+
+
+@pytest.mark.parametrize(
+    "value, message", [("-1", "must not be negative"), ("abc", "must be a number")]
+)
+def test_a_limit_on_the_form_that_is_not_one_is_refused(tmp_path, value, message):
+    with pytest.raises(ValueError, match=message):
+        build_split_config({"limit": "59", "max_input_min": value}, str(tmp_path))
+
+
+def test_a_track_longer_than_the_form_allows_is_refused_in_the_pages_words(gui):
+    gui.json("POST", "/api/upload", _song(40), area="input", name="song.wav")
+    status, started = gui.json("POST", "/api/split", {**SPLIT, "max_input_min": "0.2"})  # 12 s
+    job = gui.wait(started["job"])
+    assert status == 200 and job["state"] == "error"
+    assert "about 40 s long" in job["error"] and "Longest audio read (minutes)" in job["error"]
+    assert "--max-input-duration" not in job["error"] and "is the file valid" not in job["error"]
+    assert not gui.json("GET", "/api/state")[1]["split"]  # nothing half done
+
+    started = gui.json("POST", "/api/split", {**SPLIT, "max_input_min": "1"})[1]  # 60 s: fine
+    assert gui.wait(started["job"])["state"] == "done"
+
+
+def test_chunks_longer_than_the_form_allows_are_refused_when_merging(gui):
+    gui.json("POST", "/api/upload", _song(), area="input", name="song.wav")
+    gui.wait(gui.json("POST", "/api/split", SPLIT)[1]["job"])
+    for name in gui.json("GET", "/api/state")[1]["split"]["parts"]:
+        chunk = gui.call("GET", f"/download/chunks/{name}")[1]
+        gui.json("POST", "/api/upload", chunk, area="processed", name=name)
+    params = {"format": "wav", "samplerate": "22050"}
+    status, started = gui.json("POST", "/api/merge", {**params, "max_input_min": "0.1"})  # 6 s
+    job = gui.wait(started["job"])
+    assert status == 200 and job["state"] == "error"
+    assert "Longest audio read (minutes)" in job["error"] and "--max-input" not in job["error"]
+    status, started = gui.json("POST", "/api/merge", {**params, "max_input_min": ""})
+    assert gui.wait(started["job"])["state"] == "done"
+    status, body = gui.json("POST", "/api/merge", {**params, "max_input_min": "-3"})
+    assert status == 400 and "must not be negative" in body["error"]
+
+
+def _raw_request(gui, path, content_length, body=b""):
+    """A POST whose connection stays open after what is sent: a server that waits for more
+    than the request gave it to read would wait for as long as the client likes."""
+    import socket
+
+    target = f"{path}{'&' if '?' in path else '?'}t={gui.server.token}"
+    head = (
+        f"POST {target} HTTP/1.1\r\nHost: 127.0.0.1:{gui.server.port}\r\n"
+        f"Content-Length: {content_length}\r\n\r\n"
+    )
+    with socket.create_connection(("127.0.0.1", gui.server.port), timeout=5) as sock:
+        sock.sendall(head.encode("utf-8") + body)
+        answer = b""
+        while True:  # a timeout here is the server still waiting
+            block = sock.recv(65536)
+            if not block:
+                break
+            answer += block
+    return int(answer.split(b" ", 2)[1]), answer
+
+
+@pytest.mark.parametrize("value", ["-1", "+5", "1e3", "5 5", "\u0661\u0662", "abc"])
+@pytest.mark.parametrize("path", ["/api/split", "/api/upload?area=input&name=a.wav"])
+def test_a_content_length_that_is_not_a_number_of_bytes_is_refused_at_once(gui, path, value):
+    """``-1`` was read as "until the client closes the connection": a thread held for good."""
+    status, body = _raw_request(gui, path, value)
+    assert status == 400 and b"Content-Length" in body
+
+
+def test_a_client_that_stops_sending_is_dropped_after_a_while(gui, monkeypatch):
+    assert gui_module._Handler.timeout == 120  # what a real one waits
+    monkeypatch.setattr(gui_module._Handler, "timeout", 0.5)
+    started = time.time()
+    status, _ = _raw_request(gui, "/api/split", "100", b'{"limit": ')  # 10 of 100 bytes
+    assert status == 400 and time.time() - started < 4
+    # and the server serves the next client
+    assert gui.json("GET", "/api/state")[0] == 200
+
+
 def test_summarize_merge():
     report = MergeReport(
         boundaries=[

@@ -40,11 +40,17 @@ seamsplit merge processed/ --manifest chunks/manifest.json \
     --match instrumental --out "song_instrumental_full.mp3"
 ```
 
-Memory use is about the size of the merged audio itself (roughly 20 MB per
-minute of 16-bit stereo at 44.1 kHz, plus about the same again while the result
-is assembled), so a 20-minute song needs well under 1 GB. Chunks are decoded one
-at a time, and only the few seconds around the seam being worked on are held as
-floating point.
+Memory use is about the size of the merged audio itself (roughly 10 MB per
+minute of 16-bit stereo at 44.1 kHz, plus a tenth more while the result is
+assembled), so a 20-minute song needs well under 1 GB (a 30-minute one, 318 MB
+of audio, peaks at about 500 MB). Chunks are decoded one at a time, and only the
+few seconds around the seam being worked on are held as floating point.
+
+Because the merged audio is held whole, the files are read only up to a limit,
+`--max-input-duration` (two hours by default; `0` removes it): no chunk may be
+longer than it, and the chunks together may not add up to more than it (the files compared with
+the original chunks by `--pairing` are read under the same limit). See
+[Long files and memory](splitting.md#long-files-and-memory).
 
 Key options:
 
@@ -73,6 +79,7 @@ Key options:
 | `--audition-format` | `flac` | Format of the clips: `flac`, `wav` or `mp3`. |
 | `--audition-max` | `12` | At most this many seams, the worst-agreeing first (not applied to a list of numbers). |
 | `--report` | – | Write the per-seam report to a file (JSON if it ends in `.json`, else Markdown). |
+| `--max-input-duration` | `7200` | The longest file, and the longest merged result, in seconds, that is read; `0`: no limit. See [Long files and memory](splitting.md#long-files-and-memory). |
 | `--bitrate` | `320k` | Output MP3 bitrate. |
 | `--samplerate` | the chunks' own | Output sample rate in Hz. Left out, nothing is resampled: a 48 kHz result stays at 48 kHz. |
 

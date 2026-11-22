@@ -10,7 +10,8 @@ from typing import List, Optional, Tuple
 
 from . import __version__
 from .anchor import DEFAULT_RECON_WARN_DB
-from .audio import CouldntDecodeError, CouldntEncodeError
+from .audio import AudioTooLongError, CouldntDecodeError, CouldntEncodeError
+from .audio_io import atomic_write_text
 from .audition import (
     AUDITION_FORMATS,
     DEFAULT_MAX_SEAMS,
@@ -41,10 +42,12 @@ from .splitopts import (  # noqa: F401  (the defaults are part of this module's 
     DEFAULT_FORMAT,
     DEFAULT_OVERLAP_S,
     DEFAULT_TARGET_S,
+    add_max_input_option,
     add_split_options,
     apply_service,
     build_config,
     resolve_margin,
+    resolve_max_input,
     resolve_target,
 )
 from .splitter import (
@@ -213,6 +216,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Where the second stem goes (default: --out with the --other-match word added).",
     )
+    add_max_input_option(merge_p)
     merge_p.add_argument(
         "--recon-warn-db",
         type=float,
@@ -496,12 +500,10 @@ def _print_seam_summary(report: MergeReport, searched: bool) -> None:
 
 
 def _write_report(report: MergeReport, path: str) -> None:
-    with open(path, "w", encoding="utf-8") as f:
-        if path.lower().endswith(".json"):
-            json.dump(report.to_dict(), f, indent=2)
-            f.write("\n")
-        else:
-            f.write(report.to_markdown())
+    if path.lower().endswith(".json"):
+        atomic_write_text(path, json.dumps(report.to_dict(), indent=2) + "\n")
+    else:
+        atomic_write_text(path, report.to_markdown())
 
 
 def _print_anchor_summary(report: MergeReport, both_stems: bool) -> None:
@@ -602,6 +604,7 @@ def _run_merge(args: argparse.Namespace) -> None:
         recon_warn_db=args.recon_warn_db,
         audition=audition,
         pairing=args.pairing,
+        max_input_s=resolve_max_input(args),
     )
 
     applied = [b for b in report.boundaries if b.aligned]
@@ -665,6 +668,8 @@ def _check_merge_args(parser: argparse.ArgumentParser, args: argparse.Namespace)
 
 
 def _explain(exc: Exception) -> str:
+    if isinstance(exc, AudioTooLongError):  # a valid file: it says what to do about it
+        return str(exc)
     if isinstance(exc, CouldntDecodeError):
         return f"could not read the audio (is the file valid?): {exc}"
     if isinstance(exc, CouldntEncodeError):

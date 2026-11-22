@@ -104,6 +104,9 @@ ul.files { margin: 8px 0; padding-left: 20px; color: var(--muted); font-size: 13
           <input type="number" id="before" min="0" step="any" value="20"></label>
         <label class="field"><span data-i18n="afterSlack"></span>
           <input type="number" id="after" min="0" step="any" value="3"></label>
+        <label class="field"><span data-i18n="maxInput"></span>
+          <input type="number" id="max-input" min="0" step="any" value="120">
+          <span data-i18n="maxInputHint"></span></label>
       </div>
     </details>
     <div class="row"><button class="primary" id="split-btn" type="button" data-i18n="splitBtn"></button>
@@ -158,6 +161,9 @@ ul.files { margin: 8px 0; padding-left: 20px; color: var(--muted); font-size: 13
           <select id="method"></select></label>
         <label class="field"><span data-i18n="samplerate"></span>
           <select id="samplerate"><option value="" data-i18n="rateKeep"></option><option value="44100">44100</option><option value="48000">48000</option></select></label>
+        <label class="field"><span data-i18n="maxInput"></span>
+          <input type="number" id="max-input-merge" min="0" step="any" value="120">
+          <span data-i18n="maxInputHint"></span></label>
       </div>
       <label class="check"><input type="checkbox" id="seam-search">
         <span><span data-i18n="seamSearch"></span><br><span class="muted" data-i18n="seamSearchHint"></span></span></label>
@@ -208,6 +214,7 @@ const TEXT = {
     format: "Chunk format", formatHint: "FLAC and WAV avoid the quality loss and encoder delay MP3 adds at every seam. Pick MP3 only if your service rejects them.",
     fmtMp3: "MP3 (smallest, lossy)", fmtFlac: "FLAC (lossless, half the size of WAV)", fmtWav: "WAV (lossless)",
     advanced: "Advanced", overlap: "Overlap (seconds)", beforeSlack: "Before-slack (seconds)", afterSlack: "After-slack (seconds)",
+    maxInput: "Longest audio read (minutes)", maxInputHint: "0 = no limit. All of the audio is held in memory, and a long file takes a lot of it (two hours of stereo take about 1.3 GB).",
     splitBtn: "Split", reading: "Reading and analysing…", exporting: "Exporting {i}/{n}: {name}",
     splitDone: "Done: {n} chunks.", colName: "Chunk", colStart: "Start", colEnd: "End", colLen: "Length",
     downloadZip: "Download all (.zip)", openFolder: "Open work folder",
@@ -259,6 +266,7 @@ const TEXT = {
     format: "Định dạng chunk", formatHint: "FLAC và WAV tránh được việc MP3 mất chất lượng và bị trễ do encoder ở mỗi mối nối. Chỉ chọn MP3 nếu dịch vụ của bạn không nhận hai định dạng kia.",
     fmtMp3: "MP3 (nhỏ nhất, mất dữ liệu)", fmtFlac: "FLAC (không mất dữ liệu, nhỏ bằng nửa WAV)", fmtWav: "WAV (không mất dữ liệu)",
     advanced: "Nâng cao", overlap: "Phần chồng lấp (giây)", beforeSlack: "Rút ngắn tối đa (giây)", afterSlack: "Kéo dài tối đa (giây)",
+    maxInput: "Độ dài audio tối đa được đọc (phút)", maxInputHint: "0 = không giới hạn. Toàn bộ audio được giữ trong bộ nhớ nên file dài tốn rất nhiều RAM (hai giờ stereo chiếm khoảng 1,3 GB).",
     splitBtn: "Chia", reading: "Đang đọc và phân tích…", exporting: "Đang xuất {i}/{n}: {name}",
     splitDone: "Xong: {n} chunk.", colName: "Chunk", colStart: "Bắt đầu", colEnd: "Kết thúc", colLen: "Độ dài",
     downloadZip: "Tải tất cả (.zip)", openFolder: "Mở thư mục làm việc",
@@ -604,7 +612,7 @@ $("split-btn").addEventListener("click", () => {
   const num = (id) => $(id).value;
   const payload = {
     limit: num("limit"), format: num("format"), overlap: num("overlap"),
-    before_slack: num("before"), after_slack: num("after"),
+    before_slack: num("before"), after_slack: num("after"), max_input_min: num("max-input"),
   };
   const what = splitDeletes();
   if (what.length) {
@@ -619,7 +627,7 @@ $("merge-btn").addEventListener("click", () => {
     method: $("method").value, samplerate: $("samplerate").value,
     bitrate: $("bitrate").value, seam_search: $("seam-search").checked, seam_fade_ms: $("seam-fade").value,
     anchor: $("anchor").checked && !$("anchor").disabled, other_match: $("other-match").value,
-    audition: $("audition").value,
+    audition: $("audition").value, max_input_min: $("max-input-merge").value,
   });
 });
 ["split", "merge"].forEach((kind) => $(kind + "-cancel").addEventListener("click", async () => {

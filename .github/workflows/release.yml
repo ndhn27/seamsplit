@@ -8,13 +8,18 @@ name: Release programs
 #
 # Every action is pinned to a commit (the comment after the SHA is the version it is), not to a
 # tag: a tag can be moved to other code, a commit cannot. .github/dependabot.yml proposes the
-# updates. The build tool is pinned in packaging/requirements-build.txt. The programs get a
+# updates. The build tool, numpy and PyAV (with the FFmpeg inside it) are pinned in
+# packaging/requirements-build.txt, and the token is read-only except in the job that
+# makes the release. The programs get a
 # signed provenance attestation (see "Attest the programs" below): SHA256SUMS-*.txt, which sits
 # next to the files it lists, only shows that a download is whole.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+
+permissions:
+  contents: read # the build job; the release job asks for more, for itself, below
 
 jobs:
   build:

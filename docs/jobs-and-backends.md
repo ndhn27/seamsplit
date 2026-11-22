@@ -40,7 +40,23 @@ you to run it again.
 processed/`). Files are found by chunk name; a file whose name was lost is compared with the
 original chunks, and if it is clearly one of the chunks that has no file, it counts for that chunk.
 It also points out files whose length is not the chunk's (by more than 0.3 s), files that are
-none of the chunks, and chunks with several files. `--json` gives the same as data.
+none of the chunks, and chunks with several files. `--json` gives the same as data. The files
+that are compared are read like any other, up to `--max-input-duration` (also on `status`; see
+[Long files and memory](splitting.md#long-files-and-memory)).
+
+## Job folders from someone else
+
+A job folder is made to be copied to another computer and carried on there, so opening one
+(`status`, `run --job`) never runs anything that is written in it. `job.json` records a preset as its
+name and model (`"name": "demucs", "model": null`) and SeamSplit makes the command from them; a
+model that is a path, or starts with `-`, is refused. For a command of your own (`--backend-cmd`) it
+records only the names of the stems and a hash of the command, never the command: `run --job` on
+such a job stops until you give the same `--backend-cmd` and `--backend-stem` again, and refuses
+different ones. `status` needs no command, it only reads the stem names.
+
+Job files made by earlier versions recorded the whole command. They are still read: a preset's
+command that is exactly the one SeamSplit would make is taken as that preset; any other command is
+treated as a command of your own, so it runs only if you give it again.
 
 ## Separating on this computer
 
@@ -53,13 +69,21 @@ seamsplit run song.mp3 --backend-cmd "mytool {input} -o {output}" \
     --backend-stem "vocals=^vocals" --backend-stem "instrumental=^no_vocals"
 ```
 
+The `--backend-cmd` line is read the way the system you are on reads a command line. On Windows
+that means backslashes in a path stay (`C:\Tools\demucs\demucs.exe {input} {output}`), a path with
+spaces goes in double quotes (`"C:\Program Files\Demucs\demucs.exe" -o "{output}" {input}`) and
+single quotes mean nothing; elsewhere it is read as a POSIX shell reads it (single and double quotes, a
+backslash to escape the next character).
+
 Each chunk is given to the program in a work folder of its own, the stems are found in what it
 wrote by file name, and moved to `processed/` as `<chunk>_<stem>.<ext>`, which is what `merge`
 finds; a chunk counts as done only when both stems are there, so a run that is stopped (or a chunk
 the program fails on) is continued by running the same command again. When no `--service`,
 `--limit` or `--target` is given, chunks are cut at 120 s in WAV (no web service limit applies, and
 fewer chunks mean fewer seams); that default is a convenience of mine, not a measured optimum.
-`--backend-timeout` gives up on a chunk that takes too long.
+`--backend-timeout` gives up on a chunk that takes too long. A job started with `--backend-cmd` keeps
+only a hash of the command (see [Job folders from someone else](#job-folders-from-someone-else)):
+to resume it, give `--backend-cmd` and the `--backend-stem` options again, the same as the first time.
 
 This turns SeamSplit into a way to separate a song of any length with whatever engine is installed:
 the program decides the quality, SeamSplit does the cutting, resuming and merging.

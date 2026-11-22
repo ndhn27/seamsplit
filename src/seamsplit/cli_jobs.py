@@ -24,7 +24,13 @@ from .job import (
 )
 from .merger import DEFAULT_METHOD, METHODS
 from .pairing import PAIRING_MODES
-from .splitopts import add_split_options, apply_service, build_config
+from .splitopts import (
+    add_max_input_option,
+    add_split_options,
+    apply_service,
+    build_config,
+    resolve_max_input,
+)
 from .splitter import SplitConfig
 from .status import MANIFEST_FILE, compute_status, format_status
 
@@ -65,7 +71,8 @@ def add_parsers(subparsers: Any) -> None:
         "--backend-cmd",
         metavar="COMMAND",
         help="A command line of your own for --backend: {input} is the chunk, {output} a "
-        "folder for what it writes. Needs --backend-stem.",
+        "folder for what it writes. Needs --backend-stem. The job folder keeps only a hash of "
+        "it, so give it again to resume the job.",
     )
     run_p.add_argument(
         "--backend-stem",
@@ -129,6 +136,7 @@ def add_parsers(subparsers: Any) -> None:
         "--other-match", metavar="WORD", help="The word in the names of the second stem."
     )
     status_p.add_argument("--json", action="store_true", help="Print the status as JSON.")
+    add_max_input_option(status_p)
 
 
 def _default_job(args: argparse.Namespace) -> str:
@@ -164,6 +172,7 @@ def run_command(args: argparse.Namespace) -> int:
         "bitrate": args.bitrate,
         "anchor": args.anchor,
         "pairing": args.pairing,
+        "max_input_s": resolve_max_input(args),
     }
     result = run_job(
         folder,
@@ -243,7 +252,7 @@ def status_command(args: argparse.Namespace) -> int:
             f"'{folder}' is neither a job folder (no {JOB_FILE}) nor a split folder (no "
             f"{MANIFEST_FILE})"
         )
-    status = compute_status(chunks, processed, stems)
+    status = compute_status(chunks, processed, stems, max_input_s=resolve_max_input(args))
     if args.json:
         print(json.dumps(status.to_dict(), indent=2))
     else:

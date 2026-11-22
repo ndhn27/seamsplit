@@ -37,6 +37,7 @@ from importlib import resources
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 from .audio import AudioSegment
+from .audio_io import atomic_write_text
 
 from . import __version__
 from .plan import MergePlan
@@ -141,8 +142,8 @@ def select_seams(report: MergeReport, options: AuditionOptions) -> List[Boundary
 def _straight_join(plan: MergePlan, index: int, extra_db: float) -> Tuple[AudioSegment, int]:
     """Chunks ``index`` and ``index + 1`` (0-based) cut where the splitter cut them and
     glued, as they came back. Returns the audio and the cut's position in it."""
-    prev = AudioSegment.from_file(plan.paths[index])
-    nxt = AudioSegment.from_file(plan.paths[index + 1])
+    prev = AudioSegment.from_file(plan.paths[index], max_duration_s=plan.max_input_s)
+    nxt = AudioSegment.from_file(plan.paths[index + 1], max_duration_s=plan.max_input_s)
     if extra_db:
         prev = prev.apply_gain(extra_db)
     if (nxt.frame_rate, nxt.channels, nxt.sample_width) != (
@@ -293,9 +294,10 @@ def export_auditions(
         "variants": variants,
         "seams": seams,
     }
-    with open(os.path.join(options.out_dir, KIT_FILE), "w", encoding="utf-8") as f:
-        json.dump(kit, f, ensure_ascii=False, indent=2)
-        f.write("\n")
+    atomic_write_text(
+        os.path.join(options.out_dir, KIT_FILE),
+        json.dumps(kit, ensure_ascii=False, indent=2) + "\n",
+    )
     write_kit_page(options.out_dir, kit)
     return kit
 
@@ -314,6 +316,5 @@ def write_kit_page(out_dir: str, kit: Dict[str, Any]) -> str:
     page = template.replace("/*PLAYER*/", player_script().replace("</", "<\\/"))
     page = page.replace("/*KIT*/null", data)
     path = os.path.join(out_dir, KIT_PAGE)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(page)
+    atomic_write_text(path, page)
     return path

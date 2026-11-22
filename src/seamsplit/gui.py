@@ -52,7 +52,15 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 from . import __version__
 from .anchor import other_output_path
-from .audio import CouldntDecodeError, CouldntEncodeError, engine_info
+from .audio import (
+    DEFAULT_MAX_DURATION_S,
+    AudioTooLongError,
+    CouldntDecodeError,
+    CouldntEncodeError,
+    engine_info,
+)
+from .audio_io import atomic_write_text
+from .checks import BAD_NAME_CHARS, DEVICE_NAMES
 from .audition import KIT_FILE, AuditionOptions, parse_seams, player_script
 from .choices import CHOICES_FILE, load_choices, new_choices, record_choice, save_choices
 from .choices import summarize_choices
@@ -81,12 +89,9 @@ BITRATES = ("128k", "192k", "256k", "320k")
 MAX_UPLOAD_BYTES = 8 * 1024**3
 DEFAULT_WORKDIR = Path.home() / "SeamSplit"
 
-_BAD_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"|?*]')
-# Windows opens these as devices, whatever comes after the first dot: ``NUL.wav`` is ``NUL``
-_DEVICE_NAMES = frozenset(
-    {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"}
-    | {f"{device}{digit}" for device in ("COM", "LPT") for digit in "0123456789\u00b9\u00b2\u00b3"}
-)
+# (what Windows does with a name is in ``checks``, where a manifest's names are checked too)
+_BAD_NAME_CHARS = BAD_NAME_CHARS
+_DEVICE_NAMES = DEVICE_NAMES
 
 
 def safe_name(name: str) -> str:
@@ -210,6 +215,17 @@ def _number(params: Dict[str, Any], key: str, default: float) -> float:
     return number
 
 
+def _max_input_s(params: Dict[str, Any]) -> Optional[float]:
+    """The longest audio read, in seconds, from the form's minutes: blank is the default,
+    0 is no limit (``None``)."""
+    if params.get("max_input_min") in (None, ""):
+        return DEFAULT_MAX_DURATION_S
+    minutes = _number(params, "max_input_min", 0.0)
+    if minutes < 0:
+        raise ValueError("max_input_min must not be negative (0: no limit)")
+    return None if minutes == 0 else minutes * 60
+
+
 def build_split_config(
     params: Dict[str, Any], output_dir: str
 ) -> Tuple[SplitConfig, Optional[float]]:
@@ -241,6 +257,7 @@ def build_split_config(
         overlap_s=overlap,
         output_dir=output_dir,
         export_format=fmt,
+        max_input_s=_max_input_s(params),
     )
     return config, limit
 
@@ -277,8 +294,8 @@ def write_report_files(report: MergeReport, output: Path) -> List[str]:
     JSON for tools (what ``seamsplit merge --report`` writes). Returns the names."""
     md = output.with_name(f"{output.stem}{REPORT_SUFFIXES[0]}")
     js = output.with_name(f"{output.stem}{REPORT_SUFFIXES[1]}")
-    md.write_text(report.to_markdown(), encoding="utf-8")
-    js.write_text(json.dumps(report.to_dict(), indent=2), encoding="utf-8")
+    atomic_write_text(str(md), report.to_markdown())
+    atomic_write_text(str(js), json.dumps(report.to_dict(), indent=2))
     return [md.name, js.name]
 
 
@@ -342,6 +359,12 @@ def open_folder(path: Path) -> bool:
 
 
 def _explain(exc: Exception) -> str:
+    if isinstance(exc, AudioTooLongError):  # the page has a field for the limit, not a flag
+        return (
+            f"{exc.reason}, because the memory it takes grows with its length. To read it "
+            "anyway, raise \u201cLongest audio read (minutes)\u201d under Advanced "
+            "(0 removes the limit)."
+        )
     from .cli import _explain as explain  # cli imports this module lazily, so no cycle
 
     return explain(exc)
@@ -486,6 +509,7 @@ class GuiServer(ThreadingHTTPServer):
         bitrate = str(params.get("bitrate") or "320k")
         if bitrate not in BITRATES:
             raise ValueError(f"bitrate must be one of: {', '.join(BITRATES)}")
+        max_input_s = _max_input_s(params)
         manifest = load_manifest(str(manifest_path))
         if anchor:  # said now, not after the first chunk has been decoded
             find_original_chunks(str(ws.path("chunks")), manifest["parts"])
@@ -536,6 +560,7 @@ class GuiServer(ThreadingHTTPServer):
                     other_match=other_match,
                     other_output=None if other_name is None else str(ws.path("merged", other_name)),
                     audition=audition,
+                    max_input_s=max_input_s,
                 )
                 job.check_cancel()  # asked for while the result was being encoded
             except JobCancelled:
@@ -562,6 +587,11 @@ class GuiServer(ThreadingHTTPServer):
 
 
 class _Handler(BaseHTTPRequestHandler):
+    # A client that stops sending or reading for this long is dropped: a request is answered
+    # by a thread of its own, which would otherwise wait for it as long as it kept the
+    # connection open (every read and write is by block, so a working transfer never idles).
+    timeout = 120
+
     server: GuiServer
 
     def log_message(self, format: str, *args: Any) -> None:  # quiet: the page is the UI
@@ -604,8 +634,18 @@ class _Handler(BaseHTTPRequestHandler):
             return None
         return query
 
+    def _content_length(self, required: bool) -> int:
+        """The body's length. A length that is not a number of bytes is an error: ``-1`` would
+        be read as "until the client closes", a thread held for as long as it likes."""
+        raw = self.headers.get("Content-Length")
+        if raw is None and not required:
+            return 0
+        if raw is None or not (raw.isascii() and raw.isdigit()):
+            raise ValueError("Missing or bad Content-Length")
+        return int(raw)
+
     def _read_json(self) -> Dict[str, Any]:
-        length = int(self.headers.get("Content-Length") or 0)
+        length = self._content_length(required=False)
         if length > 1_000_000:
             raise ValueError("Request too large")
         data = json.loads(self.rfile.read(length) or b"{}")
@@ -862,10 +902,7 @@ class _Handler(BaseHTTPRequestHandler):
         area = (query.get("area") or [""])[0]
         if area not in UPLOAD_AREAS:
             raise ValueError("Unknown area")
-        raw_length = self.headers.get("Content-Length")
-        if raw_length is None or not raw_length.isdigit():
-            raise ValueError("Missing Content-Length")
-        length = int(raw_length)
+        length = self._content_length(required=True)
         if length > MAX_UPLOAD_BYTES:
             raise ValueError("File too large")
         name = "manifest.json" if area == "manifest" else safe_name((query.get("name") or [""])[0])

@@ -1,5 +1,10 @@
-# The tool that builds the one-file programs (packaging/seamsplit.spec). Pinned so that a
-# release is built with a version that has been looked at, not with whatever is newest that
-# day; .github/dependabot.yml proposes updates. numpy and PyAV come from `pip install .`
-# (their versions are written to BUILD_INFO-<system>.txt in each release).
+# What the one-file programs (packaging/seamsplit.spec) are built from. Pinned so that a release
+# is built with versions that have been looked at, not with whatever is newest that day, and
+# so that two builds of one commit hold the same numpy, PyAV and FFmpeg: the versions are the
+# ones the tests ran with, and have wheels for Python 3.12 on every system the release builds
+# for (Linux x86_64, Windows x86_64, macOS arm64 and x86_64). `pip install .` takes them from
+# here, in place of the ranges in pyproject.toml (numpy>=1.24, av>=14.0). Their versions are also
+# written to BUILD_INFO-<system>.txt in each release. .github/dependabot.yml proposes updates.
 pyinstaller==6.22.3
+numpy==2.5.4
+av==19.0.2

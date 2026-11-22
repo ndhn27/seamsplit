@@ -237,7 +237,8 @@ def _decode(container: Any, max_duration_s: Optional[float], name: str = "the fi
                     or total_bytes > max_duration_s * width * channels * rate
                 ):
                     raise too_long(name, max_duration_s, "holds more audio than that")
-            buffer.write(array)
+            # .data: numpy's stubs declare the buffer protocol only on Python 3.12+
+            buffer.write(array.data)
 
     for frame in container.decode(stream):
         if resampler is None:

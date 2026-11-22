@@ -189,7 +189,8 @@ class _Settled:
             )
             np.rint(final, out=final)
             np.clip(final, self._lo, self._hi, out=final)
-            self._buffer.write(final.astype(self._dtype))
+            # .data: numpy's stubs declare the buffer protocol only on Python 3.12+
+            self._buffer.write(final.astype(self._dtype).data)
             self.frames += cut // self._channels
             block = block[cut:].copy()
         return block

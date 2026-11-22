@@ -80,7 +80,8 @@ def _downmix(rows: np.ndarray, dtype: np.dtype) -> bytes:
     that is then converted with ``tobytes()`` is)."""
     out = io.BytesIO()
     for start in range(0, len(rows), _DOWNMIX_BLOCK):
-        out.write(_downmix_block(rows[start : start + _DOWNMIX_BLOCK], dtype))
+        # .data: numpy's stubs declare the buffer protocol only on Python 3.12+
+        out.write(_downmix_block(rows[start : start + _DOWNMIX_BLOCK], dtype).data)
     return out.getvalue()
 
 
